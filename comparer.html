@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Bandingkan dua JSON / daftar URL: hanya di A, hanya di B, dan sama. Lokal di browser.">
   <meta name="color-scheme" content="light dark">
-  <title>API Response Comparer</title>
+  <title>Comparer</title>
   <style>
     :root {
       --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #64748b;
@@ -34,7 +34,7 @@
     body { margin: 0; background: var(--bg); color: var(--text);
       font-family: Inter, ui-sans-system, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
       line-height: 1.6; transition: background .25s, color .25s; -webkit-font-smoothing: antialiased; }
-    .container { width: min(100% - 32px, 1020px); margin: 0 auto; padding: 28px 0 48px; }
+    .container { width: 100%; max-width: 1600px; margin: 0 auto; padding: 28px 24px 48px; }
     .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
     .brand { display: flex; align-items: center; gap: 12px; }
     .logo { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center;
@@ -114,7 +114,7 @@
     .footer { margin-top: 22px; text-align: center; color: var(--muted); font-size: 12.5px; }
     @media (max-width: 900px) { .stats { grid-template-columns: repeat(3, 1fr); } .res-grid { grid-template-columns: 1fr; } }
     @media (max-width: 640px) {
-      .container { padding: 18px 0 36px; } .card { padding: 16px; }
+      .container { padding: 18px 16px 36px; } .card { padding: 16px; }
       .two { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr 1fr; }
       .actions .btn { flex: 1 1 auto; justify-content: center; }
     }
@@ -126,8 +126,7 @@
       <div class="brand">
         <div class="logo">&lt;/&gt;</div>
         <div>
-          <div style="font-weight:800;font-size:14px">API Tools</div>
-          <small><i></i><span data-i18n="badge">100% lokal · tanpa backend</span></small>
+          <div style="font-weight:800;font-size:14px">Comparer</div>
         </div>
       </div>
       <div class="controls">
@@ -141,8 +140,7 @@
 
     <a class="back" href="./index.html">← <span data-i18n="back">Beranda</span></a>
     <header class="hero">
-      <h1 data-i18n="title">API Response Comparer</h1>
-      <p data-i18n="subtitle">Tempel dua JSON atau daftar URL (A vs B), atau upload file. Otomatis ekstrak URL lalu bandingkan.</p>
+      <h1 data-i18n="title">Comparer</h1>
     </header>
 
     <section class="card">
@@ -152,7 +150,7 @@
       </div>
       <div class="two">
         <div class="side">
-          <h3><span class="badge-a">A</span> <span data-i18n="side_a">Sisi A (lama)</span></h3>
+          <h3><span class="badge-a">A</span> <span data-i18n="side_a">Sisi A</span></h3>
           <p class="hint" data-i18n="side_a_hint">Paste JSON / URL list A</p>
           <textarea id="jsonA" spellcheck="false"></textarea>
           <label class="drop" id="dropA" for="fileA"><strong data-i18n="drop_title">+ file .json</strong><span data-i18n="drop_sub"> / drag & drop</span></label>
@@ -161,7 +159,7 @@
           <div class="actions"><button type="button" class="btn secondary" id="clearA" data-i18n="clear_a" style="height:34px;font-size:13px">Bersihkan A</button></div>
         </div>
         <div class="side">
-          <h3><span class="badge-b">B</span> <span data-i18n="side_b">Sisi B (baru)</span></h3>
+          <h3><span class="badge-b">B</span> <span data-i18n="side_b">Sisi B</span></h3>
           <p class="hint" data-i18n="side_b_hint">Paste JSON / URL list B</p>
           <textarea id="jsonB" spellcheck="false"></textarea>
           <label class="drop" id="dropB" for="fileB"><strong data-i18n="drop_title">+ file .json</strong><span data-i18n="drop_sub"> / drag & drop</span></label>
@@ -220,8 +218,6 @@
       </div>
       <div id="resultStatus" class="status" aria-live="polite"></div>
     </section>
-
-    <p class="footer" data-i18n="footer">Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend</p>
   </main>
 
   <script>
@@ -231,12 +227,11 @@
 
     const STR = {
       id: {
-        badge: "100% lokal · tanpa backend", back: "Beranda",
-        title: "API Response Comparer",
-        subtitle: "Tempel dua JSON atau daftar URL (A vs B), atau upload file. Otomatis ekstrak URL lalu bandingkan.",
+        back: "Beranda",
+        title: "Comparer",
         input_title: "1. Input A vs B", input_desc: "Mendukung JSON mentah atau daftar URL per baris. File digabung dengan paste per sisi.",
-        side_a: "Sisi A (lama)", side_a_hint: "Paste JSON / URL list A",
-        side_b: "Sisi B (baru)", side_b_hint: "Paste JSON / URL list B",
+        side_a: "Sisi A", side_a_hint: "Paste JSON / URL list A",
+        side_b: "Sisi B", side_b_hint: "Paste JSON / URL list B",
         drop_title: "+ file .json", drop_sub: " / drag & drop",
         clear_a: "Bersihkan A", clear_b: "Bersihkan B",
         opt_query: "Abaikan query string (?…)", opt_slash: "Abaikan trailing slash",
@@ -246,7 +241,6 @@
         res_title: "2. Hasil Perbandingan", res_desc: "Hanya di A = dihapus, Hanya di B = tambahan baru.",
         only_a: "Hanya di A", only_b: "Hanya di B", both: "Sama",
         download: "Download hasil (.txt)",
-        footer: "Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend",
         ph_a: "Paste JSON / URL list A di sini…", ph_b: "Paste JSON / URL list B di sini…",
         ph_res: "Hasil akan muncul di sini…",
         err_empty: "Isi sisi A dan B dulu (paste atau file).",
@@ -256,12 +250,11 @@
         copied: "Disalin.", downloaded: "File compare_result.txt dibuat."
       },
       en: {
-        badge: "100% local · no backend", back: "Home",
-        title: "API Response Comparer",
-        subtitle: "Paste two JSONs or URL lists (A vs B), or upload files. URLs are auto-extracted then compared.",
+        back: "Home",
+        title: "Comparer",
         input_title: "1. Input A vs B", input_desc: "Supports raw JSON or one-URL-per-line. Files are merged with paste per side.",
-        side_a: "Side A (old)", side_a_hint: "Paste JSON / URL list A",
-        side_b: "Side B (new)", side_b_hint: "Paste JSON / URL list B",
+        side_a: "Side A", side_a_hint: "Paste JSON / URL list A",
+        side_b: "Side B", side_b_hint: "Paste JSON / URL list B",
         drop_title: "+ .json files", drop_sub: " / drag & drop",
         clear_a: "Clear A", clear_b: "Clear B",
         opt_query: "Ignore query string (?…)", opt_slash: "Ignore trailing slash",
@@ -271,7 +264,6 @@
         res_title: "2. Comparison Results", res_desc: "Only in A = removed, Only in B = newly added.",
         only_a: "Only in A", only_b: "Only in B", both: "Same",
         download: "Download results (.txt)",
-        footer: "Local processing · Never fetches URLs · No backend needed",
         ph_a: "Paste JSON / URL list A here…", ph_b: "Paste JSON / URL list B here…",
         ph_res: "Results will appear here…",
         err_empty: "Fill side A and B first (paste or files).",

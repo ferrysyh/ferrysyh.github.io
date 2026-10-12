@@ -59,9 +59,10 @@
     }
 
     .container {
-      width: min(100% - 32px, 920px);
+      width: 100%;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 28px 0 48px;
+      padding: 28px 24px 48px;
     }
 
     /* Topbar */
@@ -376,7 +377,7 @@
     }
 
     @media (max-width: 640px) {
-      .container { padding: 18px 0 36px; }
+      .container { padding: 18px 16px 36px; }
       .card { padding: 16px; }
       .stats { grid-template-columns: 1fr; gap: 8px; }
       .actions .btn { flex: 1 1 auto; justify-content: center; }
@@ -392,7 +393,6 @@
         <div class="logo">&lt;/&gt;</div>
         <div>
           <div style="font-weight:800;letter-spacing:-.3px;font-size:14px">URL Extractor</div>
-          <small><i></i><span data-i18n="badge">100% lokal · tanpa backend</span></small>
         </div>
       </div>
       <div class="controls">
@@ -407,7 +407,6 @@
     <header class="hero">
       <a href="./index.html" style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:600;margin-bottom:12px">← <span data-i18n="back">Beranda</span></a>
       <h1 data-i18n="title">API Unique URL Extractor</h1>
-      <p data-i18n="subtitle">Ekstrak URL unik dari JSON API response via paste langsung atau upload file. Semua diproses lokal di browser.</p>
     </header>
 
     <section class="card">
@@ -431,7 +430,7 @@
       ></textarea>
 
       <div
-        style="display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.06em"
+        style="display:flex;align-items:center;gap:12px;margin:22px 0 16px;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.06em"
         aria-hidden="true"
       >
         <span style="flex:1;height:1px;background:var(--border)"></span>
@@ -487,8 +486,6 @@
       </div>
       <div id="resultStatus" class="status" aria-live="polite"></div>
     </section>
-
-    <p class="footer" data-i18n="footer">Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend</p>
   </main>
 
   <script>
@@ -501,9 +498,7 @@
     const STR = {
       id: {
         back: "Beranda",
-        badge: "100% lokal · tanpa backend",
         title: "API Unique URL Extractor",
-        subtitle: "Ekstrak URL unik dari JSON API response via paste langsung atau upload file. Semua diproses lokal di browser.",
         input_title: "Input JSON",
         input_desc: "Paste response di bawah, atau tambah file .json. Keduanya digabung saat diproses.",
         paste_label: "Paste JSON Response",
@@ -521,7 +516,6 @@
         stat_dup: "Duplikat Dihapus",
         drop_title: "Klik untuk pilih file",
         drop_sub: " atau seret & letakkan .json di sini (maks 20 MB/file)",
-        footer: "Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend",
         json_ph: 'Paste JSON response di sini, contoh:\n{\n  "data": [\n    {"url": "https://example.com/api/users?id=1"}\n  ]\n}',
         res_ph: "Hasil ekstraksi akan muncul di sini...",
         err_empty: "Isi paste atau pilih file dulu.",
@@ -543,9 +537,7 @@
       },
       en: {
         back: "Home",
-        badge: "100% local · no backend",
         title: "API Unique URL Extractor",
-        subtitle: "Extract unique URLs from JSON API responses via direct paste or file upload. All processed locally in your browser.",
         input_title: "JSON Input",
         input_desc: "Paste a response below, or add .json files. Both are merged on process.",
         paste_label: "Paste JSON Response",
@@ -563,7 +555,6 @@
         stat_dup: "Duplicates Removed",
         drop_title: "Click to choose files",
         drop_sub: " or drag & drop .json here (max 20 MB/file)",
-        footer: "Local processing · Never fetches URLs · No backend needed",
         json_ph: 'Paste JSON response here, e.g.:\n{\n  "data": [\n    {"url": "https://example.com/api/users?id=1"}\n  ]\n}',
         res_ph: "Extraction results will appear here...",
         err_empty: "Fill paste or choose files first.",

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Kumpulan tools API lokal: extractor dan comparer.">
+  <meta name="description" content="Kumpulan tools: extractor, comparer, dan sheet viewer.">
   <meta name="color-scheme" content="light dark">
-  <title>API Tools — Beranda</title>
+  <title>All Tools — Beranda</title>
   <style>
     :root {
       --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #64748b;
@@ -26,7 +26,7 @@
       font-family: Inter, ui-sans-system, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
       line-height: 1.6; transition: background .25s, color .25s; -webkit-font-smoothing: antialiased;
     }
-    .container { width: min(100% - 32px, 920px); margin: 0 auto; padding: 28px 0 48px; }
+    .container { width: 100%; max-width: 1600px; margin: 0 auto; padding: 28px 24px 48px; }
     .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
     .brand { display: flex; align-items: center; gap: 12px; }
     .logo { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center;
@@ -44,7 +44,7 @@
       background: var(--card); color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 16px; }
     .hero h1 { margin: 0; font-size: clamp(28px,4.5vw,38px); line-height: 1.1; letter-spacing: -1px; font-weight: 800; }
     .hero p { margin: 8px 0 0; color: var(--muted); font-size: 15.5px; max-width: 62ch; }
-    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
     .tool-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
       padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px;
       transition: transform .12s ease, border-color .15s; text-decoration: none; color: inherit; }
@@ -53,15 +53,13 @@
       font-size: 20px; background: var(--bg); border: 1px solid var(--border); }
     .tool-card h2 { margin: 0; font-size: 17px; letter-spacing: -.2px; }
     .tool-card p { margin: 0; font-size: 13.5px; color: var(--muted); flex: 1; }
-    .pill { display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 800; letter-spacing: .04em;
-      text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); width: fit-content;
-      color: var(--success); background: var(--success-bg); }
     .btn { height: 38px; padding: 0 14px; border-radius: var(--radius-sm); border: 1px solid transparent;
       background: var(--primary); color: var(--primary-text); font-weight: 650; font-size: 13.5px;
       display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; }
     .btn.secondary { background: var(--card); color: var(--text); border-color: var(--border); }
     .footer { margin-top: 22px; text-align: center; color: var(--muted); font-size: 12.5px; }
-    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } .container { padding: 18px 0 36px; } }
+    @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } .container { padding: 18px 16px 36px; } }
   </style>
 </head>
 <body>
@@ -70,8 +68,7 @@
       <div class="brand">
         <div class="logo">&lt;/&gt;</div>
         <div>
-          <div style="font-weight:800;letter-spacing:-.3px;font-size:14px">API Tools</div>
-          <small><i></i><span data-i18n="badge">100% lokal · tanpa backend</span></small>
+          <div style="font-weight:800;letter-spacing:-.3px;font-size:14px">All Tools</div>
         </div>
       </div>
       <div class="controls">
@@ -85,28 +82,27 @@
 
     <header class="hero">
       <h1 data-i18n="title">Pilih Tools</h1>
-      <p data-i18n="subtitle">Semua berjalan lokal di browser. Extractor dan Comparer sudah siap.</p>
     </header>
 
     <div class="grid">
       <a class="tool-card" href="./extractor.html">
         <div class="tool-icon">🔗</div>
-        <span class="pill" data-i18n="ready">● Siap</span>
         <h2 data-i18n="ext_title">API Unique URL Extractor</h2>
         <p data-i18n="ext_desc">Paste JSON atau upload file .json, ekstrak URL unik + hapus duplikat otomatis.</p>
-        <span class="btn"><span data-i18n="open">Buka Extractor</span> →</span>
       </a>
 
       <a class="tool-card" href="./comparer.html">
         <div class="tool-icon">⚖️</div>
-        <span class="pill" data-i18n="ready2">● Siap</span>
         <h2 data-i18n="cmp_title">API Response Comparer</h2>
         <p data-i18n="cmp_desc">Bandingkan dua JSON / dua set URL untuk lihat tambah, hilang, dan sama.</p>
-        <span class="btn secondary"><span data-i18n="open_cmp">Buka Comparer</span> →</span>
+      </a>
+
+      <a class="tool-card" href="./sheet.html">
+        <div class="tool-icon">📊</div>
+        <h2 data-i18n="sheet_title">Sheet Viewer</h2>
+        <p data-i18n="sheet_desc">Sinkron data Google Sheet read-only jadi tabel + cari + download CSV.</p>
       </a>
     </div>
-
-    <p class="footer" data-i18n="footer">Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend</p>
   </main>
 
   <script>
@@ -114,28 +110,22 @@
     const $ = (id) => document.getElementById(id);
     const STR = {
       id: {
-        badge: "100% lokal · tanpa backend",
         title: "Pilih Tools",
-        subtitle: "Semua berjalan lokal di browser. Extractor dan Comparer sudah siap.",
-        ready: "● Siap", ready2: "● Siap",
         ext_title: "API Unique URL Extractor",
         ext_desc: "Paste JSON atau upload file .json, ekstrak URL unik + hapus duplikat otomatis.",
         cmp_title: "API Response Comparer",
         cmp_desc: "Bandingkan dua JSON / dua set URL untuk lihat tambah, hilang, dan sama.",
-        open: "Buka Extractor", open_cmp: "Buka Comparer",
-        footer: "Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend"
+        sheet_title: "Sheet Viewer",
+        sheet_desc: "Sinkron data Google Sheet read-only jadi tabel + cari + download CSV."
       },
       en: {
-        badge: "100% local · no backend",
         title: "Pick a Tool",
-        subtitle: "All runs locally in your browser. Extractor and Comparer are ready.",
-        ready: "● Ready", ready2: "● Ready",
         ext_title: "API Unique URL Extractor",
         ext_desc: "Paste JSON or upload .json files, extract unique URLs + auto-dedup.",
         cmp_title: "API Response Comparer",
         cmp_desc: "Compare two JSONs / two URL sets to see added, removed, and same.",
-        open: "Open Extractor", open_cmp: "Open Comparer",
-        footer: "Local processing · Never fetches URLs · No backend needed"
+        sheet_title: "Sheet Viewer",
+        sheet_desc: "Sync read-only Google Sheet data into a table + search + CSV download."
       }
     };
     let lang = localStorage.getItem("api-ext-lang") || "id";

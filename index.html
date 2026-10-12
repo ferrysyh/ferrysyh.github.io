@@ -1,525 +1,566 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Extract unique API URLs from JSON responses locally in your browser.">
-  <title>API Unique Scraper</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Unique URL Extractor</title>
+  <meta name="description" content="Extract unique HTTP and HTTPS URLs from JSON API responses.">
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #0b1020;
-      --panel: #121a2d;
-      --border: #293650;
-      --text: #e8eefb;
-      --muted: #9aa9c3;
-      --accent: #78a9ff;
-      --success: #8fe0b0;
-      --danger: #ff9b9b;
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --text: #172033;
+      --muted: #64748b;
+      --border: #dce3ed;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #b91c1c;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      background: radial-gradient(ellipse at top, #152344, var(--bg) 60%);
+      background: var(--bg);
       color: var(--text);
-      font: 15px/1.6 system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.6;
     }
 
-    main {
-      width: min(960px, calc(100% - 32px));
-      margin: 48px auto;
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 32px 18px 56px;
     }
+
+    header { margin-bottom: 24px; }
 
     h1 {
-      font-size: clamp(2rem, 5vw, 3rem);
-      line-height: 1.15;
-      letter-spacing: -1px;
-      margin-bottom: 10px;
+      margin: 0 0 8px;
+      font-size: clamp(25px, 4vw, 34px);
+      line-height: 1.25;
     }
 
     h2 {
-      font-size: 1.1rem;
+      margin: 0 0 8px;
+      font-size: 19px;
     }
 
-    p, .muted {
+    p { margin: 6px 0 12px; }
+
+    .muted, .hint {
       color: var(--muted);
+      font-size: 14px;
     }
 
-    .panel {
-      background: var(--panel);
+    .card {
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 14px;
       padding: 22px;
-      margin: 18px 0;
+      margin-bottom: 18px;
+      box-shadow: 0 3px 12px rgba(15, 23, 42, 0.035);
     }
 
-    .dropzone {
-      background: #0d1528;
-      border: 2px dashed #52678d;
-      border-radius: 12px;
-      padding: 28px 16px;
-      text-align: center;
+    textarea, input[type="file"] {
+      width: 100%;
+      font: inherit;
+    }
+
+    textarea {
+      display: block;
+      min-height: 190px;
+      resize: vertical;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    textarea:focus, input:focus-visible, button:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
     }
 
     input[type="file"] {
       display: block;
-      max-width: 100%;
-      margin: 18px auto;
-    }
-
-    button {
-      border: 1px solid #4267a6;
-      background: #244a87;
-      color: white;
-      padding: 11px 16px;
+      margin: 14px 0;
+      padding: 12px;
+      border: 1px dashed #aab7ca;
       border-radius: 9px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    button.secondary {
-      background: #18243b;
-      border-color: var(--border);
-    }
-
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    button:focus-visible,
-    input:focus-visible,
-    textarea:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 3px;
+      background: #fafcff;
     }
 
     .actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
+      gap: 9px;
+      margin-top: 13px;
+    }
+
+    button {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 10px 15px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+      background: var(--primary);
+      color: white;
+    }
+
+    button:hover { background: var(--primary-hover); }
+
+    button.secondary {
+      color: var(--text);
+      background: #fff;
+      border-color: var(--border);
+    }
+
+    button.secondary:hover { background: #f1f5f9; }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .5;
     }
 
     .stats {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
+      margin-bottom: 18px;
     }
 
     .stat {
-      background: #0d1528;
+      padding: 16px;
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 14px;
     }
 
-    .stat strong {
-      display: block;
-      font-size: 1.8rem;
-    }
-
-    .stat span {
+    .stat-label {
       color: var(--muted);
-      font-size: 0.85rem;
+      font-size: 13px;
     }
 
-    label {
+    .stat-value {
       display: block;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 300px;
-      resize: vertical;
-      background: #080e1b;
-      color: #dce8ff;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      font: 13px/1.6 Consolas, monospace;
-    }
-
-    #status {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      margin-top: 14px;
-    }
-
-    .success {
-      color: var(--success);
-    }
-
-    .error {
-      color: var(--danger);
-    }
-
-    .notice {
-      padding: 12px 14px;
-      background: #0d1528;
-      border-left: 3px solid var(--accent);
-      border-radius: 5px;
-    }
-
-    code {
+      font-size: 28px;
+      font-weight: 750;
       overflow-wrap: anywhere;
     }
 
-    footer {
-      margin: 28px 0;
-      font-size: 0.85rem;
-      color: var(--muted);
+    .status {
+      margin-top: 12px;
+      font-size: 14px;
+      overflow-wrap: anywhere;
     }
 
-    @media (max-width: 560px) {
-      main {
-        margin: 24px auto;
-      }
+    .status.error { color: var(--danger); }
+    .status.success { color: #166534; }
 
-      .panel {
-        padding: 16px;
-      }
+    #results {
+      min-height: 260px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.7;
+    }
 
-      .stats {
-        grid-template-columns: 1fr;
-      }
+    .footer {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 22px 12px 36px; }
+      .card { padding: 16px; }
+      .stats { grid-template-columns: 1fr; gap: 8px; }
+      .stat { padding: 12px 14px; }
+      .stat-value { font-size: 23px; }
+      .actions button { flex: 1 1 auto; }
     }
   </style>
 </head>
 
 <body>
-<main>
-  <header>
-    <h1>API Unique Scraper</h1>
-    <p>
-      Extract unique API URLs from JSON responses.
-      Simple, fast, and processed locally in your browser.
-    </p>
-  </header>
+  <main class="container">
+    <header>
+      <h1>API Unique URL Extractor</h1>
+      <p class="muted">
+        Ekstrak URL unik dari response API JSON dengan upload file
+        atau copy-paste langsung.
+      </p>
+    </header>
 
-  <section class="panel">
-    <div class="dropzone">
-      <label for="jsonFiles">Select JSON response files</label>
+    <section class="card">
+      <h2>1. Paste JSON Response</h2>
+      <p class="hint">
+        Tempel response JSON dari Burp Suite, Postman, browser,
+        atau sumber lain. Pemrosesan dilakukan di browser Anda.
+      </p>
+
+      <textarea
+        id="jsonInput"
+        placeholder='Contoh:
+{
+  "data": [
+    {"url": "https://example.com/api/users?id=1"},
+    {"url": "https://example.com/api/users?id=1"},
+    {"url": "https://example.com/api/users?id=2"}
+  ]
+}'
+        spellcheck="false"
+        aria-label="Paste JSON response"
+      ></textarea>
+
+      <div class="actions">
+        <button type="button" id="processPasteBtn">
+          Proses JSON
+        </button>
+        <button type="button" class="secondary" id="clearPasteBtn">
+          Bersihkan Paste
+        </button>
+      </div>
+      <div id="pasteStatus" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h2>2. Upload File JSON</h2>
+      <p class="hint">
+        Pilih satu atau beberapa file .json. Hasilnya akan digabungkan
+        dengan data yang sudah diproses dari paste.
+      </p>
 
       <input
-        id="jsonFiles"
         type="file"
+        id="fileInput"
         accept=".json,application/json"
         multiple
+        aria-label="Pilih file JSON"
       >
 
-      <p>Upload one or multiple JSON files. Maximum 20 MB per file.</p>
-
-      <div class="actions" style="justify-content:center">
-        <button id="extractBtn" type="button">
-          Extract Unique URLs
+      <div class="actions">
+        <button type="button" id="processFilesBtn">
+          Proses File
         </button>
-
-        <button id="resetBtn" class="secondary" type="button">
-          Reset
+        <button type="button" class="secondary" id="clearFilesBtn">
+          Bersihkan Pilihan File
         </button>
       </div>
-    </div>
+      <div id="fileStatus" class="status" aria-live="polite"></div>
+    </section>
 
-    <div id="status" role="status" aria-live="polite"></div>
-  </section>
-
-  <section class="panel">
-    <h2>Extraction Summary</h2>
-
-    <div class="stats">
+    <section aria-label="Statistik hasil" class="stats">
       <div class="stat">
-        <strong id="fileCount">0</strong>
-        <span>Files processed</span>
+        <span class="stat-label">URL Unik</span>
+        <span class="stat-value" id="uniqueCount">0</span>
       </div>
-
       <div class="stat">
-        <strong id="uniqueCount">0</strong>
-        <span>Unique URLs</span>
+        <span class="stat-label">Total URL Ditemukan</span>
+        <span class="stat-value" id="totalCount">0</span>
       </div>
-
       <div class="stat">
-        <strong id="duplicateCount">0</strong>
-        <span>Duplicates removed</span>
+        <span class="stat-label">Duplikat Dihapus</span>
+        <span class="stat-value" id="duplicateCount">0</span>
       </div>
-    </div>
+    </section>
 
-    <div style="margin-top:22px">
-      <label for="results">Extracted URLs</label>
+    <section class="card">
+      <h2>3. Hasil URL Unik</h2>
+      <p class="hint">
+        Setiap URL ditampilkan satu kali. Query parameter dipertahankan.
+      </p>
 
       <textarea
         id="results"
         readonly
         spellcheck="false"
-        placeholder="Unique URLs will appear here..."
+        placeholder="Hasil URL akan muncul di sini..."
+        aria-label="Hasil URL unik"
       ></textarea>
 
       <div class="actions">
-        <button id="downloadBtn" type="button" disabled>
-          Download api_unique.txt
+        <button type="button" id="copyBtn" disabled>
+          Copy Hasil
         </button>
-
-        <button id="copyBtn" class="secondary" type="button" disabled>
-          Copy Results
+        <button type="button" id="downloadBtn" disabled>
+          Download TXT
+        </button>
+        <button type="button" class="secondary" id="resetBtn">
+          Reset Semua
         </button>
       </div>
-    </div>
-  </section>
+      <div id="resultStatus" class="status" aria-live="polite"></div>
+    </section>
 
-  <section class="panel">
-    <h2>How it works</h2>
+    <p class="footer">
+      Client-side only · Tidak ada request ke URL yang diekstrak ·
+      Tidak memerlukan backend
+    </p>
+  </main>
 
-    <ol>
-      <li>Select one or more JSON response files.</li>
-      <li>Click <b>Extract Unique URLs</b>.</li>
-      <li>Review the extracted URLs.</li>
-      <li>Download the result as a TXT file.</li>
-    </ol>
+  <script>
+    "use strict";
 
-    <div class="notice">
-      <b>Privacy:</b> All processing happens locally in your browser.
-      Files are not uploaded to a backend, and this tool does not send
-      requests to the extracted endpoints. Use only data you are
-      authorized to analyze.
-    </div>
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
-    <ul>
-      <li>Only absolute HTTP/HTTPS URLs are included.</li>
-      <li>Exact duplicate URL strings are removed.</li>
-      <li>Different query parameters remain distinct.</li>
-      <li>Different query parameter orders remain distinct.</li>
-      <li>Relative paths such as <code>/api/users</code> are ignored.</li>
-      <li>URLs inside nested JSON objects and arrays are supported.</li>
-    </ul>
-  </section>
+    // Menyimpan URL dari setiap sumber yang sudah berhasil diproses.
+    const sources = new Map();
 
-  <footer>
-    API Unique Scraper · Static web application · No external dependencies
-  </footer>
-</main>
+    const $ = (id) => document.getElementById(id);
 
-<script>
-"use strict";
-
-(() => {
-  const fileInput = document.getElementById("jsonFiles");
-  const extractBtn = document.getElementById("extractBtn");
-  const resetBtn = document.getElementById("resetBtn");
-  const downloadBtn = document.getElementById("downloadBtn");
-  const copyBtn = document.getElementById("copyBtn");
-  const results = document.getElementById("results");
-  const status = document.getElementById("status");
-
-  const fileCount = document.getElementById("fileCount");
-  const uniqueCount = document.getElementById("uniqueCount");
-  const duplicateCount = document.getElementById("duplicateCount");
-
-  const MAX_FILE_SIZE = 20 * 1024 * 1024;
-  const URL_PATTERN = /https?:\/\/[^\s"'<>]+/gi;
-  const TRAILING_PUNCTUATION = /[.,;:!?)\]}]+$/;
-
-  function setStatus(message, type = "") {
-    status.textContent = message;
-    status.className = type;
-  }
-
-  function isValidHttpUrl(value) {
-    try {
-      const parsed = new URL(value);
-
-      return (
-        (parsed.protocol === "http:" ||
-          parsed.protocol === "https:") &&
-        Boolean(parsed.hostname) &&
-        !/[\u0000-\u0020]/.test(value)
-      );
-    } catch {
-      return false;
-    }
-  }
-
-  function extractUrlsFromString(value, output) {
-    const matches = value.match(URL_PATTERN) || [];
-
-    for (const match of matches) {
-      const candidate = match.replace(TRAILING_PUNCTUATION, "");
-
-      if (isValidHttpUrl(candidate)) {
-        output.push(candidate);
-      }
-    }
-  }
-
-  function walkJson(value, output) {
-    if (typeof value === "string") {
-      extractUrlsFromString(value, output);
-      return;
+    function setStatus(id, message, type = "") {
+      const el = $(id);
+      el.textContent = message;
+      el.className = "status" + (type ? " " + type : "");
     }
 
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        walkJson(item, output);
-      }
-      return;
-    }
+    // Mengambil URL absolut HTTP/HTTPS dari string.
+    // Tidak melakukan request ke URL tersebut.
+    function extractUrls(json) {
+      const found = [];
 
-    if (value !== null && typeof value === "object") {
-      for (const item of Object.values(value)) {
-        walkJson(item, output);
-      }
-    }
-  }
+      function scan(value) {
+        if (typeof value === "string") {
+          const pattern = /https?:\/\/[^\s"'<>\\]+/gi;
+          let match;
 
-  function resetResults() {
-    results.value = "";
-    fileCount.textContent = "0";
-    uniqueCount.textContent = "0";
-    duplicateCount.textContent = "0";
+          while ((match = pattern.exec(value)) !== null) {
+            let url = match[0];
 
-    downloadBtn.disabled = true;
-    copyBtn.disabled = true;
-  }
+            // Hilangkan tanda baca penutup yang biasanya
+            // berasal dari teks di sekitar URL.
+            url = url.replace(/[.,;:!?)}\]]+$/g, "");
 
-  extractBtn.addEventListener("click", async () => {
-    const files = Array.from(fileInput.files || []);
-
-    if (files.length === 0) {
-      setStatus("Please select at least one JSON file.", "error");
-      return;
-    }
-
-    const oversizedFiles = files.filter(
-      file => file.size > MAX_FILE_SIZE
-    );
-
-    if (oversizedFiles.length > 0) {
-      setStatus(
-        "Files exceeding the 20 MB limit:\n" +
-        oversizedFiles.map(file => file.name).join("\n"),
-        "error"
-      );
-      return;
-    }
-
-    extractBtn.disabled = true;
-    resetResults();
-    setStatus("Processing JSON files...");
-
-    const uniqueUrls = new Set();
-    let processedFiles = 0;
-    let totalUrls = 0;
-    const errors = [];
-
-    try {
-      for (const file of files) {
-        const isJsonFile =
-          file.name.toLowerCase().endsWith(".json") ||
-          file.type === "application/json";
-
-        if (!isJsonFile) {
-          errors.push(`${file.name}: not a JSON file.`);
-          continue;
+            if (url) found.push(url);
+          }
+          return;
         }
 
-        try {
-          const content = await file.text();
-          const data = JSON.parse(content);
-          const extracted = [];
+        if (Array.isArray(value)) {
+          for (const item of value) scan(item);
+          return;
+        }
 
-          walkJson(data, extracted);
+        if (value !== null && typeof value === "object") {
+          for (const item of Object.values(value)) scan(item);
+        }
+      }
 
-          totalUrls += extracted.length;
+      scan(json);
+      return found;
+    }
 
-          for (const url of extracted) {
-            uniqueUrls.add(url);
+    function renderResults() {
+      const allUrls = [];
+
+      for (const urls of sources.values()) {
+        allUrls.push(...urls);
+      }
+
+      const uniqueUrls = [...new Set(allUrls)];
+
+      $("uniqueCount").textContent = uniqueUrls.length.toLocaleString();
+      $("totalCount").textContent = allUrls.length.toLocaleString();
+      $("duplicateCount").textContent =
+        (allUrls.length - uniqueUrls.length).toLocaleString();
+
+      $("results").value = uniqueUrls.join("\n");
+      $("copyBtn").disabled = uniqueUrls.length === 0;
+      $("downloadBtn").disabled = uniqueUrls.length === 0;
+
+      return { allUrls, uniqueUrls };
+    }
+
+    function processJsonText(text, sourceId) {
+      const trimmed = text.trim();
+
+      if (!trimmed) {
+        throw new Error("Input JSON kosong.");
+      }
+
+      let parsed;
+
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch {
+        throw new Error(
+          "Format JSON tidak valid. Periksa tanda kurung, koma, dan tanda kutip."
+        );
+      }
+
+      const urls = extractUrls(parsed);
+      sources.set(sourceId, urls);
+
+      renderResults();
+      return urls;
+    }
+
+    $("processPasteBtn").addEventListener("click", () => {
+      try {
+        const urls = processJsonText(
+          $("jsonInput").value,
+          "paste"
+        );
+
+        setStatus(
+          "pasteStatus",
+          `Berhasil memproses JSON. ${urls.length} URL ditemukan, termasuk duplikat jika ada.`,
+          "success"
+        );
+        setStatus("resultStatus", "Hasil telah diperbarui.", "success");
+      } catch (error) {
+        setStatus("pasteStatus", error.message, "error");
+      }
+    });
+
+    $("clearPasteBtn").addEventListener("click", () => {
+      $("jsonInput").value = "";
+      sources.delete("paste");
+      renderResults();
+      setStatus("pasteStatus", "Input paste dibersihkan.");
+      setStatus("resultStatus", "Hasil diperbarui.");
+    });
+
+    $("processFilesBtn").addEventListener("click", async () => {
+      const files = Array.from($("fileInput").files);
+
+      if (files.length === 0) {
+        setStatus("fileStatus", "Pilih setidaknya satu file JSON.", "error");
+        return;
+      }
+
+      const button = $("processFilesBtn");
+      button.disabled = true;
+      setStatus("fileStatus", "Sedang memproses file...");
+
+      let processed = 0;
+      const errors = [];
+
+      try {
+        for (const file of files) {
+          const sourceId = "file:" + file.name;
+
+          if (file.size > MAX_FILE_SIZE) {
+            errors.push(`${file.name}: ukuran melebihi 20 MB.`);
+            continue;
           }
 
-          processedFiles++;
-        } catch (error) {
-          errors.push(`${file.name}: ${error.message}`);
+          try {
+            const content = await file.text();
+            processJsonText(content, sourceId);
+            processed++;
+          } catch (error) {
+            errors.push(`${file.name}: ${error.message}`);
+          }
+        }
+
+        if (errors.length > 0) {
+          setStatus(
+            "fileStatus",
+            `Berhasil memproses ${processed} file. ${errors.join(" ")}`,
+            processed > 0 ? "" : "error"
+          );
+        } else {
+          setStatus(
+            "fileStatus",
+            `Berhasil memproses ${processed} file JSON.`,
+            "success"
+          );
+        }
+
+        setStatus("resultStatus", "Hasil telah diperbarui.", "success");
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("clearFilesBtn").addEventListener("click", () => {
+      $("fileInput").value = "";
+
+      for (const key of [...sources.keys()]) {
+        if (key.startsWith("file:")) sources.delete(key);
+      }
+
+      renderResults();
+      setStatus("fileStatus", "Pilihan file dan hasil dari file dibersihkan.");
+      setStatus("resultStatus", "Hasil diperbarui.");
+    });
+
+    $("copyBtn").addEventListener("click", async () => {
+      const output = $("results").value;
+
+      if (!output) return;
+
+      try {
+        await navigator.clipboard.writeText(output);
+        setStatus("resultStatus", "Hasil berhasil disalin.", "success");
+      } catch {
+        // Fallback untuk browser yang tidak menyediakan Clipboard API.
+        $("results").focus();
+        $("results").select();
+
+        try {
+          const copied = document.execCommand("copy");
+          setStatus(
+            "resultStatus",
+            copied
+              ? "Hasil berhasil disalin."
+              : "Copy otomatis gagal. Pilih teks hasil lalu salin secara manual.",
+            copied ? "success" : "error"
+          );
+        } catch {
+          setStatus(
+            "resultStatus",
+            "Copy otomatis gagal. Pilih teks hasil lalu tekan Ctrl+C.",
+            "error"
+          );
         }
       }
+    });
 
-      const output = Array.from(uniqueUrls);
+    $("downloadBtn").addEventListener("click", () => {
+      const output = $("results").value;
+      if (!output) return;
 
-      results.value = output.join("\n");
-      fileCount.textContent = String(processedFiles);
-      uniqueCount.textContent = String(output.length);
-      duplicateCount.textContent = String(
-        Math.max(0, totalUrls - output.length)
-      );
+      const blob = new Blob([output + "\n"], {
+        type: "text/plain;charset=utf-8"
+      });
 
-      downloadBtn.disabled = output.length === 0;
-      copyBtn.disabled = output.length === 0;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-      let message =
-        `Completed: ${processedFiles} file(s) processed.\n` +
-        `${output.length} unique URL(s) found.`;
+      link.href = url;
+      link.download = "api_unique.txt";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-      if (errors.length > 0) {
-        message += "\n\nSkipped files:\n- " + errors.join("\n- ");
-        setStatus(message, "error");
-      } else if (output.length === 0) {
-        message += "\nNo valid absolute HTTP/HTTPS URLs were found.";
-        setStatus(message);
-      } else {
-        setStatus(message, "success");
-      }
-    } finally {
-      extractBtn.disabled = false;
-    }
-  });
+      URL.revokeObjectURL(url);
+      setStatus("resultStatus", "File TXT berhasil dibuat.", "success");
+    });
 
-  downloadBtn.addEventListener("click", () => {
-    if (!results.value) return;
+    $("resetBtn").addEventListener("click", () => {
+      sources.clear();
 
-    const blob = new Blob(
-      [results.value + "\n"],
-      { type: "text/plain;charset=utf-8" }
-    );
+      $("jsonInput").value = "";
+      $("fileInput").value = "";
 
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+      setStatus("pasteStatus", "");
+      setStatus("fileStatus", "");
+      setStatus("resultStatus", "");
 
-    link.href = objectUrl;
-    link.download = "api_unique.txt";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      renderResults();
+    });
 
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-  });
-
-  copyBtn.addEventListener("click", async () => {
-    if (!results.value) return;
-
-    try {
-      await navigator.clipboard.writeText(results.value);
-      setStatus("Results copied to clipboard.", "success");
-    } catch {
-      results.focus();
-      results.select();
-      setStatus(
-        "Clipboard access unavailable. Press Ctrl+C to copy the selected results."
-      );
-    }
-  });
-
-  resetBtn.addEventListener("click", () => {
-    fileInput.value = "";
-    resetResults();
-    setStatus("");
-  });
-})();
-</script>
+    renderResults();
+  </script>
 </body>
 </html>

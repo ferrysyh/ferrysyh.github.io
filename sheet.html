@@ -143,14 +143,12 @@
     <a class="back" href="./index.html">← <span data-i18n="back">Beranda</span></a>
     <header class="hero">
       <h1 data-i18n="title">Sheet Viewer</h1>
-      <p data-i18n="subtitle">Data tab SUMMARY, read-only. Perubahan di sheet tampil maksimal ~5 menit kemudian.</p>
     </header>
 
     <div class="duo">
       <section class="card" id="attnCard" hidden>
         <div class="card-head">
           <h2>⚠ Perlu Perhatian (<span id="attnCount">0</span>)</h2>
-          <p class="meta">Issue · overdue (lewat End Date tapi belum Complete) · Daily Unreported. Klik item untuk filter tabel.</p>
         </div>
         <div id="attnList" class="attn"></div>
       </section>
@@ -158,7 +156,6 @@
       <section class="card" id="progCard" hidden>
         <div class="card-head">
           <h2>▶ On Progress (<span id="progCount">0</span>)</h2>
-          <p class="meta">Semua task yang sedang berjalan. Klik item untuk filter tabel.</p>
         </div>
         <div id="progList" class="attn"></div>
       </section>
@@ -194,7 +191,6 @@
     const STR = {
       id: {
         back: "Beranda", title: "Sheet Viewer",
-        subtitle: "Data tab SUMMARY, read-only. Perubahan di sheet tampil maksimal ~5 menit kemudian.",
         data_title: "Data", refresh: "Refresh",
         err_fetch: "Gagal memuat. Cek koneksi internet lalu Refresh.",
         ok: (r, c) => `Berhasil memuat ${r} baris × ${c} kolom.`,
@@ -204,7 +200,6 @@
       },
       en: {
         back: "Home", title: "Sheet Viewer",
-        subtitle: "SUMMARY tab data, read-only. Sheet edits appear after ~5 minutes.",
         data_title: "Data", refresh: "Refresh",
         err_fetch: "Failed to load. Check your connection, then Refresh.",
         ok: (r, c) => `Loaded ${r} rows × ${c} columns.`,

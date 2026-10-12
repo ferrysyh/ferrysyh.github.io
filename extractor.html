@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Extract unique URLs from JSON API responses locally in your browser.">
+  <meta name="color-scheme" content="light dark">
+  <title>API Unique URL Extractor</title>
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --input-bg: #f8fafc;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-text: #ffffff;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --ring: rgba(37, 99, 235, .18);
+      --shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 8px 24px -12px rgba(15, 23, 42, .12);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #09090b;
+      --card: #111113;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --border: #27272a;
+      --input-bg: #09090b;
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --primary-text: #ffffff;
+      --danger: #f87171;
+      --danger-bg: rgba(248, 113, 113, .12);
+      --success: #34d399;
+      --success-bg: rgba(52, 211, 153, .12);
+      --ring: rgba(59, 130, 246, .35);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -12px rgba(0, 0, 0, .6);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-system, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.6;
+      transition: background .25s ease, color .25s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: min(100% - 32px, 920px);
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 800;
+      font-size: 17px;
+      letter-spacing: -.5px;
+      flex-shrink: 0;
+    }
+
+    .brand small {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      background: var(--card);
+      padding: 3px 9px;
+      border-radius: 999px;
+      margin-top: 2px;
+    }
+
+    .brand small i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      display: inline-block;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .seg {
+      display: flex;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px;
+    }
+
+    .seg button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .seg button[aria-pressed="true"] {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform .15s ease;
+    }
+    .icon-btn:hover { transform: translateY(-1px); }
+
+    /* Hero */
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(28px, 4.5vw, 38px);
+      line-height: 1.1;
+      letter-spacing: -1px;
+      font-weight: 800;
+    }
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 15.5px;
+      max-width: 62ch;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 16px;
+      box-shadow: var(--shadow);
+      transition: background .25s ease, border-color .25s ease;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .step {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--text);
+      color: var(--bg);
+      font-size: 13px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .card-head h2 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -.2px;
+    }
+    .card-head p {
+      margin: 2px 0 0;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 190px;
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--input-bg);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Consolas, Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      resize: vertical;
+      overflow-wrap: anywhere;
+      transition: border-color .15s, box-shadow .15s, background .25s;
+    }
+    #results { min-height: 240px; }
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+
+    .drop {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--input-bg);
+      padding: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13.5px;
+      margin-top: 4px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .drop:hover, .drop.dragover {
+      border-color: var(--primary);
+      background: var(--success-bg);
+      color: var(--text);
+    }
+    .drop strong { color: var(--text); }
+    input[type="file"] { display: none; }
+    .file-list {
+      margin: 10px 0 0;
+      padding: 0;
+      list-style: none;
+      font-size: 13px;
+      color: var(--muted);
+      display: grid;
+      gap: 6px;
+    }
+    .file-list li {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--card);
+      overflow-wrap: anywhere;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button.btn {
+      appearance: none;
+      height: 40px;
+      padding: 0 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: var(--primary);
+      color: var(--primary-text);
+      font-weight: 650;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform .05s, background .15s;
+    }
+    button.btn:hover { background: var(--primary-hover); }
+    button.btn:active { transform: translateY(1px); }
+    button.btn.secondary {
+      background: var(--card);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    button.btn.secondary:hover { background: var(--input-bg); }
+    button.btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    button.btn:focus-visible, .icon-btn:focus-visible, .seg button:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+    .stat-label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .stat-value {
+      display: block;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -.8px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 13.5px;
+      color: var(--muted);
+      min-height: 20px;
+      overflow-wrap: anywhere;
+    }
+    .status.success { color: var(--success); font-weight: 600; }
+    .status.error {
+      color: var(--danger);
+      font-weight: 600;
+      background: var(--danger-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .footer {
+      margin-top: 22px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 18px 0 36px; }
+      .card { padding: 16px; }
+      .stats { grid-template-columns: 1fr; gap: 8px; }
+      .actions .btn { flex: 1 1 auto; justify-content: center; }
+      .topbar { align-items: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">&lt;/&gt;</div>
+        <div>
+          <div style="font-weight:800;letter-spacing:-.3px;font-size:14px">URL Extractor</div>
+          <small><i></i><span data-i18n="badge">100% lokal · tanpa backend</span></small>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Language">
+          <button type="button" id="langIdBtn" aria-pressed="true">ID</button>
+          <button type="button" id="langEnBtn" aria-pressed="false">EN</button>
+        </div>
+        <button type="button" class="icon-btn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">🌙</button>
+      </div>
+    </div>
+
+    <header class="hero">
+      <a href="./index.html" style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:600;margin-bottom:12px">← <span data-i18n="back">Beranda</span></a>
+      <h1 data-i18n="title">API Unique URL Extractor</h1>
+      <p data-i18n="subtitle">Ekstrak URL unik dari JSON API response via paste langsung atau upload file. Semua diproses lokal di browser.</p>
+    </header>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="step">1</div>
+        <div>
+          <h2 data-i18n="input_title">Input JSON</h2>
+          <p data-i18n="input_desc">Paste response di bawah, atau tambah file .json. Keduanya digabung saat diproses.</p>
+        </div>
+      </div>
+
+      <label
+        style="display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin:0 0 6px;letter-spacing:.02em"
+        for="jsonInput"
+        data-i18n="paste_label"
+      >Paste JSON Response</label>
+      <textarea
+        id="jsonInput"
+        spellcheck="false"
+        aria-label="Paste JSON response"
+      ></textarea>
+
+      <div
+        style="display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.06em"
+        aria-hidden="true"
+      >
+        <span style="flex:1;height:1px;background:var(--border)"></span>
+        <span data-i18n="or_divider">ATAU</span>
+        <span style="flex:1;height:1px;background:var(--border)"></span>
+      </div>
+
+      <label class="drop" id="dropZone" for="fileInput">
+        <strong data-i18n="drop_title">Klik untuk pilih file</strong>
+        <span data-i18n="drop_sub"> atau seret & letakkan .json di sini (maks 20 MB/file)</span>
+      </label>
+      <input type="file" id="fileInput" accept=".json,application/json" multiple>
+      <ul class="file-list" id="fileList"></ul>
+
+      <div class="actions">
+        <button type="button" class="btn" id="processAllBtn">⚡ <span data-i18n="process_all">Proses Semua</span></button>
+        <button type="button" class="btn secondary" id="clearPasteBtn" data-i18n="clear_paste">Bersihkan</button>
+        <button type="button" class="btn secondary" id="clearFilesBtn" data-i18n="clear_files">Bersihkan File</button>
+      </div>
+      <div id="inputStatus" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="stats" aria-label="Statistik hasil">
+      <div class="stat">
+        <span class="stat-label" data-i18n="stat_unique">URL Unik</span>
+        <span class="stat-value" id="uniqueCount">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label" data-i18n="stat_total">Total Ditemukan</span>
+        <span class="stat-value" id="totalCount">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label" data-i18n="stat_dup">Duplikat Dihapus</span>
+        <span class="stat-value" id="duplicateCount">0</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="step">2</div>
+        <div>
+          <h2 data-i18n="results_title">Hasil URL Unik</h2>
+          <p data-i18n="results_desc">Setiap URL identik hanya ditampilkan sekali.</p>
+        </div>
+      </div>
+
+      <textarea id="results" readonly spellcheck="false" aria-label="Hasil URL unik"></textarea>
+
+      <div class="actions">
+        <button type="button" class="btn" id="copyBtn" disabled>⧉ <span data-i18n="copy">Copy</span></button>
+        <button type="button" class="btn secondary" id="downloadBtn" disabled>⬇ <span data-i18n="download">Download .txt</span></button>
+        <button type="button" class="btn secondary" id="resetBtn" data-i18n="reset">Reset Semua</button>
+      </div>
+      <div id="resultStatus" class="status" aria-live="polite"></div>
+    </section>
+
+    <p class="footer" data-i18n="footer">Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend</p>
+  </main>
+
+  <script>
+    "use strict";
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
+    const sources = new Map();
+    const $ = (id) => document.getElementById(id);
+
+    /* ---------- i18n ---------- */
+    const STR = {
+      id: {
+        back: "Beranda",
+        badge: "100% lokal · tanpa backend",
+        title: "API Unique URL Extractor",
+        subtitle: "Ekstrak URL unik dari JSON API response via paste langsung atau upload file. Semua diproses lokal di browser.",
+        input_title: "Input JSON",
+        input_desc: "Paste response di bawah, atau tambah file .json. Keduanya digabung saat diproses.",
+        paste_label: "Paste JSON Response",
+        or_divider: "ATAU",
+        results_title: "Hasil URL Unik",
+        results_desc: "Setiap URL identik hanya ditampilkan sekali.",
+        process_all: "Proses Semua",
+        clear_paste: "Bersihkan",
+        clear_files: "Bersihkan File",
+        copy: "Copy",
+        download: "Download .txt",
+        reset: "Reset Semua",
+        stat_unique: "URL Unik",
+        stat_total: "Total Ditemukan",
+        stat_dup: "Duplikat Dihapus",
+        drop_title: "Klik untuk pilih file",
+        drop_sub: " atau seret & letakkan .json di sini (maks 20 MB/file)",
+        footer: "Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend",
+        json_ph: 'Paste JSON response di sini, contoh:\n{\n  "data": [\n    {"url": "https://example.com/api/users?id=1"}\n  ]\n}',
+        res_ph: "Hasil ekstraksi akan muncul di sini...",
+        err_empty: "Isi paste atau pilih file dulu.",
+        err_invalid: "JSON tidak valid. Periksa format response yang ditempel.",
+        err_nofile: "Silakan pilih setidaknya satu file JSON.",
+        processing: "Memproses...",
+        err_big: "ukuran melebihi 20 MB.",
+        ok_all: (p, f) => `Selesai. Paste: ${p} URL, File: ${f} file berhasil.`,
+        ok_paste_only: (n) => `Berhasil memproses paste. ${n} URL ditemukan.`,
+        ok_files_only: (n) => `Berhasil memproses ${n} file JSON.`,
+        mixed: (ok, err) => `Berhasil: ${ok} file. Kesalahan: ${err}`,
+        ok_updated: "Hasil telah diperbarui.",
+        cleared_paste: "Input paste telah dibersihkan.",
+        cleared_file: "Input file telah dibersihkan.",
+        copied: "Hasil berhasil disalin.",
+        copy_fail: "Copy otomatis gagal. Pilih hasil lalu tekan Ctrl+C.",
+        copy_manual: "Pilih teks hasil secara manual lalu tekan Ctrl+C.",
+        downloaded: "File api_unique.txt berhasil dibuat."
+      },
+      en: {
+        back: "Home",
+        badge: "100% local · no backend",
+        title: "API Unique URL Extractor",
+        subtitle: "Extract unique URLs from JSON API responses via direct paste or file upload. All processed locally in your browser.",
+        input_title: "JSON Input",
+        input_desc: "Paste a response below, or add .json files. Both are merged on process.",
+        paste_label: "Paste JSON Response",
+        or_divider: "OR",
+        results_title: "Unique URL Results",
+        results_desc: "Each identical URL is shown only once.",
+        process_all: "Process All",
+        clear_paste: "Clear",
+        clear_files: "Clear Files",
+        copy: "Copy",
+        download: "Download .txt",
+        reset: "Reset All",
+        stat_unique: "Unique URLs",
+        stat_total: "Total Found",
+        stat_dup: "Duplicates Removed",
+        drop_title: "Click to choose files",
+        drop_sub: " or drag & drop .json here (max 20 MB/file)",
+        footer: "Local processing · Never fetches URLs · No backend needed",
+        json_ph: 'Paste JSON response here, e.g.:\n{\n  "data": [\n    {"url": "https://example.com/api/users?id=1"}\n  ]\n}',
+        res_ph: "Extraction results will appear here...",
+        err_empty: "Fill paste or choose files first.",
+        err_invalid: "Invalid JSON. Check the pasted response format.",
+        err_nofile: "Please select at least one JSON file.",
+        processing: "Processing...",
+        err_big: "exceeds 20 MB.",
+        ok_all: (p, f) => `Done. Paste: ${p} URLs, Files: ${f} succeeded.`,
+        ok_paste_only: (n) => `Paste processed. ${n} URLs found.`,
+        ok_files_only: (n) => `Successfully processed ${n} JSON files.`,
+        mixed: (ok, err) => `Success: ${ok} files. Errors: ${err}`,
+        ok_updated: "Results updated.",
+        cleared_paste: "Paste input cleared.",
+        cleared_file: "File input cleared.",
+        copied: "Results copied.",
+        copy_fail: "Auto-copy failed. Select results then press Ctrl+C.",
+        copy_manual: "Select result text manually then press Ctrl+C.",
+        downloaded: "File api_unique.txt created."
+      }
+    };
+    let lang = localStorage.getItem("api-ext-lang") || "id";
+    if (!STR[lang]) lang = "id";
+    const t = (k) => STR[lang][k];
+
+    function applyLang() {
+      document.documentElement.lang = lang;
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const k = el.getAttribute("data-i18n");
+        if (STR[lang][k]) el.textContent = STR[lang][k];
+      });
+      $("jsonInput").placeholder = t("json_ph");
+      $("results").placeholder = t("res_ph");
+      $("langIdBtn").setAttribute("aria-pressed", lang === "id");
+      $("langEnBtn").setAttribute("aria-pressed", lang === "en");
+      localStorage.setItem("api-ext-lang", lang);
+    }
+
+    /* ---------- theme ---------- */
+    function applyTheme(mode) {
+      document.documentElement.setAttribute("data-theme", mode);
+      $("themeToggle").textContent = mode === "dark" ? "☀️" : "🌙";
+      localStorage.setItem("api-ext-theme", mode);
+    }
+    let theme = localStorage.getItem("api-ext-theme");
+    if (!theme) theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    applyTheme(theme);
+
+    $("themeToggle").addEventListener("click", () => {
+      theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      applyTheme(theme);
+    });
+    $("langIdBtn").addEventListener("click", () => { lang = "id"; applyLang(); });
+    $("langEnBtn").addEventListener("click", () => { lang = "en"; applyLang(); });
+
+    /* ---------- core logic (preserved) ---------- */
+    function setStatus(id, message, type = "") {
+      const el = $(id);
+      el.textContent = message;
+      el.className = "status" + (type ? " " + type : "");
+    }
+
+    function extractUrls(data) {
+      const urls = [];
+      function scan(value) {
+        if (typeof value === "string") {
+          const regex = /https?:\/\/[^\s"'<>\\]+/gi;
+          let m;
+          while ((m = regex.exec(value)) !== null) {
+            let url = m[0].replace(/[.,;!?)}\]]+$/g, "");
+            if (url) urls.push(url);
+          }
+          return;
+        }
+        if (Array.isArray(value)) { value.forEach(scan); return; }
+        if (value !== null && typeof value === "object") Object.values(value).forEach(scan);
+      }
+      scan(data);
+      return urls;
+    }
+
+    function renderResults() {
+      const all = [];
+      for (const u of sources.values()) all.push(...u);
+      const uniq = [...new Set(all)];
+      $("uniqueCount").textContent = uniq.length.toLocaleString();
+      $("totalCount").textContent = all.length.toLocaleString();
+      $("duplicateCount").textContent = (all.length - uniq.length).toLocaleString();
+      $("results").value = uniq.join("\n");
+      $("copyBtn").disabled = uniq.length === 0;
+      $("downloadBtn").disabled = uniq.length === 0;
+      return { all, uniq };
+    }
+
+    function processJsonText(text, sourceId) {
+      if (!text.trim()) throw new Error(t("err_empty"));
+      let data;
+      try { data = JSON.parse(text); }
+      catch { throw new Error(t("err_invalid")); }
+      const urls = extractUrls(data);
+      sources.set(sourceId, urls);
+      renderResults();
+      return urls;
+    }
+
+    $("processAllBtn").addEventListener("click", async () => {
+      const pasteText = $("jsonInput").value;
+      const files = Array.from($("fileInput").files);
+      const hasPaste = pasteText.trim().length > 0;
+
+      if (!hasPaste && files.length === 0) {
+        setStatus("inputStatus", t("err_empty"), "error");
+        return;
+      }
+
+      const btn = $("processAllBtn");
+      btn.disabled = true;
+      setStatus("inputStatus", t("processing"));
+
+      let pasteCount = 0;
+      let fileDone = 0;
+      const errs = [];
+
+      try {
+        if (hasPaste) {
+          try {
+            const urls = processJsonText(pasteText, "paste");
+            pasteCount = urls.length;
+          } catch (e) { errs.push(e.message); }
+        }
+
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          const sid = `file:${i}:${f.name}`;
+          if (f.size > MAX_FILE_SIZE) { errs.push(`${f.name}: ${t("err_big")}`); continue; }
+          try { processJsonText(await f.text(), sid); fileDone++; }
+          catch (e) { errs.push(`${f.name}: ${e.message}`); }
+        }
+
+        if (errs.length > 0 && pasteCount === 0 && fileDone === 0) {
+          setStatus("inputStatus", errs.join(" "), "error");
+        } else if (errs.length > 0) {
+          const okMsg = hasPaste && files.length
+            ? t("ok_all")(pasteCount, fileDone)
+            : hasPaste ? t("ok_paste_only")(pasteCount) : t("ok_files_only")(fileDone);
+          setStatus("inputStatus", `${okMsg} ${t("mixed")(fileDone, errs.join(" "))}`, "");
+        } else {
+          const msg = hasPaste && files.length
+            ? t("ok_all")(pasteCount, fileDone)
+            : hasPaste ? t("ok_paste_only")(pasteCount) : t("ok_files_only")(fileDone);
+          setStatus("inputStatus", msg, "success");
+        }
+        setStatus("resultStatus", t("ok_updated"), "success");
+      } finally { btn.disabled = false; }
+    });
+
+    $("clearPasteBtn").addEventListener("click", () => {
+      $("jsonInput").value = "";
+      sources.delete("paste");
+      renderResults();
+      setStatus("inputStatus", t("cleared_paste"));
+      setStatus("resultStatus", t("ok_updated"));
+    });
+
+    function refreshFileList() {
+      const files = Array.from($("fileInput").files);
+      $("fileList").innerHTML = files.map(f =>
+        `<li><span>${f.name}</span><span>${(f.size/1024).toFixed(1)} KB</span></li>`
+      ).join("");
+    }
+    $("fileInput").addEventListener("change", refreshFileList);
+
+    const dz = $("dropZone");
+    ["dragover","dragenter"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("dragover"); }));
+    ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("dragover"); }));
+    dz.addEventListener("drop", e => {
+      if (e.dataTransfer.files.length) { $("fileInput").files = e.dataTransfer.files; refreshFileList(); }
+    });
+
+    $("clearFilesBtn").addEventListener("click", () => {
+      $("fileInput").value = ""; $("fileList").innerHTML = "";
+      for (const k of [...sources.keys()]) if (k.startsWith("file:")) sources.delete(k);
+      renderResults();
+      setStatus("inputStatus", t("cleared_file"));
+      setStatus("resultStatus", t("ok_updated"));
+    });
+
+    $("copyBtn").addEventListener("click", async () => {
+      const out = $("results").value;
+      if (!out) return;
+      try {
+        await navigator.clipboard.writeText(out);
+        setStatus("resultStatus", t("copied"), "success");
+      } catch {
+        $("results").focus(); $("results").select();
+        try {
+          const ok = document.execCommand("copy");
+          setStatus("resultStatus", ok ? t("copied") : t("copy_fail"), ok ? "success" : "error");
+        } catch { setStatus("resultStatus", t("copy_manual"), "error"); }
+      }
+    });
+
+    $("downloadBtn").addEventListener("click", () => {
+      const out = $("results").value;
+      if (!out) return;
+      const blob = new Blob([out + "\n"], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "api_unique.txt";
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      setStatus("resultStatus", t("downloaded"), "success");
+    });
+
+    $("resetBtn").addEventListener("click", () => {
+      sources.clear();
+      $("jsonInput").value = ""; $("fileInput").value = ""; $("fileList").innerHTML = "";
+      setStatus("inputStatus", ""); setStatus("resultStatus", "");
+      renderResults();
+    });
+
+    applyLang();
+    renderResults();
+  </script>
+</body>
+</html>

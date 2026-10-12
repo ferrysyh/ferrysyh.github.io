@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Bandingkan dua JSON / daftar URL: hanya di A, hanya di B, dan sama. Lokal di browser.">
+  <meta name="color-scheme" content="light dark">
+  <title>API Response Comparer</title>
+  <style>
+    :root {
+      --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #64748b;
+      --border: #e2e8f0; --input-bg: #f8fafc;
+      --primary: #2563eb; --primary-hover: #1d4ed8; --primary-text: #ffffff;
+      --danger: #dc2626; --danger-bg: #fef2f2;
+      --success: #059669; --success-bg: #ecfdf5;
+      --warn: #b45309; --warn-bg: #fffbeb;
+      --info: #0284c7; --info-bg: #f0f9ff;
+      --ring: rgba(37,99,235,.18);
+      --shadow: 0 1px 2px rgba(15,23,42,.05), 0 8px 24px -12px rgba(15,23,42,.12);
+      --radius: 16px; --radius-sm: 10px;
+    }
+    [data-theme="dark"] {
+      --bg: #09090b; --card: #111113; --text: #fafafa; --muted: #a1a1aa;
+      --border: #27272a; --input-bg: #09090b;
+      --primary: #3b82f6; --primary-hover: #60a5fa; --primary-text: #ffffff;
+      --danger: #f87171; --danger-bg: rgba(248,113,113,.12);
+      --success: #34d399; --success-bg: rgba(52,211,153,.12);
+      --warn: #fbbf24; --warn-bg: rgba(180,83,9,.15);
+      --info: #38bdf8; --info-bg: rgba(56,189,248,.12);
+      --ring: rgba(59,130,246,.35);
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -12px rgba(0,0,0,.6);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text);
+      font-family: Inter, ui-sans-system, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.6; transition: background .25s, color .25s; -webkit-font-smoothing: antialiased; }
+    .container { width: min(100% - 32px, 1020px); margin: 0 auto; padding: 28px 0 48px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center;
+      background: var(--text); color: var(--bg); font-weight: 800; font-size: 17px; }
+    .brand small { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+      color: var(--muted); border: 1px solid var(--border); background: var(--card);
+      padding: 3px 9px; border-radius: 999px; margin-top: 2px; }
+    .brand small i { width: 7px; height: 7px; border-radius: 50%; background: var(--success); display: inline-block; }
+    .controls { display: flex; align-items: center; gap: 8px; }
+    .seg { display: flex; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 3px; }
+    .seg button { border: 0; background: transparent; color: var(--muted); font-size: 12.5px; font-weight: 700;
+      padding: 6px 12px; border-radius: 999px; cursor: pointer; line-height: 1; }
+    .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+    .icon-btn { width: 36px; height: 36px; border-radius: 999px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 16px; }
+    .back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none;
+      font-size: 13.5px; font-weight: 600; margin-bottom: 12px; }
+    .back:hover { color: var(--text); }
+    .hero h1 { margin: 0; font-size: clamp(28px,4.5vw,38px); line-height: 1.1; letter-spacing: -1px; font-weight: 800; }
+    .hero p { margin: 8px 0 0; color: var(--muted); font-size: 15.5px; max-width: 70ch; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; margin-top: 16px; box-shadow: var(--shadow); }
+    .card h2 { margin: 0; font-size: 16px; letter-spacing: -.2px; }
+    .card-head p { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+    .side { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; background: var(--card); min-width: 0; }
+    .side h3 { margin: 0 0 2px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .badge-a, .badge-b { width: 22px; height: 22px; border-radius: 7px; display: inline-grid; place-items: center;
+      font-size: 12px; font-weight: 800; color: #fff; }
+    .badge-a { background: #2563eb; } .badge-b { background: #059669; }
+    .side p.hint { margin: 0 0 8px; font-size: 12.5px; color: var(--muted); }
+    textarea { display: block; width: 100%; min-height: 150px; padding: 12px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--input-bg); color: var(--text);
+      font-family: ui-monospace, Consolas, Monaco, monospace; font-size: 12.5px; line-height: 1.65;
+      resize: vertical; overflow-wrap: anywhere; }
+    textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--ring); }
+    textarea.result { min-height: 180px; }
+    .drop { border: 1.5px dashed var(--border); border-radius: var(--radius-sm); background: var(--input-bg);
+      padding: 10px; text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 8px; cursor: pointer; display: block; }
+    .drop:hover, .drop.dragover { border-color: var(--primary); color: var(--text); }
+    input[type="file"] { display: none; }
+    .file-list { margin: 8px 0 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--muted); display: grid; gap: 5px; }
+    .file-list li { border: 1px solid var(--border); border-radius: 7px; padding: 5px 9px;
+      display: flex; justify-content: space-between; gap: 8px; overflow-wrap: anywhere; }
+    .opts { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: 13.5px; }
+    .opts label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+    .opts input { width: 16px; height: 16px; accent-color: var(--primary); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    button.btn, a.btn { appearance: none; height: 40px; padding: 0 16px; border: 1px solid transparent;
+      border-radius: var(--radius-sm); background: var(--primary); color: var(--primary-text);
+      font-weight: 650; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center;
+      gap: 8px; text-decoration: none; }
+    button.btn:hover { background: var(--primary-hover); }
+    button.btn.secondary { background: var(--card); color: var(--text); border-color: var(--border); }
+    button.btn.secondary:hover { background: var(--input-bg); }
+    button.btn:disabled { opacity: .5; cursor: not-allowed; }
+    button.btn:focus-visible, .icon-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 16px; }
+    .stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px 14px; box-shadow: var(--shadow); min-width: 0; }
+    .stat-label { display: block; color: var(--muted); font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .06em; }
+    .stat-value { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
+    .stat.only-a { border-top: 3px solid #2563eb; } .stat.only-b { border-top: 3px solid #059669; }
+    .stat.both { border-top: 3px solid var(--muted); }
+    .res-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .res { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; min-width: 0; }
+    .res h3 { margin: 0 0 8px; font-size: 13.5px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .count { font-size: 11.5px; font-weight: 800; background: var(--input-bg); border: 1px solid var(--border);
+      padding: 2px 8px; border-radius: 999px; }
+    .res .mini-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .res .mini-actions button { flex: 1; height: 32px; font-size: 12.5px; padding: 0 8px; }
+    .status { margin-top: 10px; font-size: 13.5px; color: var(--muted); min-height: 20px; overflow-wrap: anywhere; }
+    .status.success { color: var(--success); font-weight: 600; }
+    .status.error { color: var(--danger); font-weight: 600; background: var(--danger-bg);
+      border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+    .footer { margin-top: 22px; text-align: center; color: var(--muted); font-size: 12.5px; }
+    @media (max-width: 900px) { .stats { grid-template-columns: repeat(3, 1fr); } .res-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) {
+      .container { padding: 18px 0 36px; } .card { padding: 16px; }
+      .two { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr 1fr; }
+      .actions .btn { flex: 1 1 auto; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">&lt;/&gt;</div>
+        <div>
+          <div style="font-weight:800;font-size:14px">API Tools</div>
+          <small><i></i><span data-i18n="badge">100% lokal · tanpa backend</span></small>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Language">
+          <button type="button" id="langIdBtn" aria-pressed="true">ID</button>
+          <button type="button" id="langEnBtn" aria-pressed="false">EN</button>
+        </div>
+        <button type="button" class="icon-btn" id="themeToggle" title="theme">🌙</button>
+      </div>
+    </div>
+
+    <a class="back" href="./index.html">← <span data-i18n="back">Beranda</span></a>
+    <header class="hero">
+      <h1 data-i18n="title">API Response Comparer</h1>
+      <p data-i18n="subtitle">Tempel dua JSON atau daftar URL (A vs B), atau upload file. Otomatis ekstrak URL lalu bandingkan.</p>
+    </header>
+
+    <section class="card">
+      <div class="card-head">
+        <h2 data-i18n="input_title">1. Input A vs B</h2>
+        <p data-i18n="input_desc">Mendukung JSON mentah atau daftar URL per baris. File digabung dengan paste per sisi.</p>
+      </div>
+      <div class="two">
+        <div class="side">
+          <h3><span class="badge-a">A</span> <span data-i18n="side_a">Sisi A (lama)</span></h3>
+          <p class="hint" data-i18n="side_a_hint">Paste JSON / URL list A</p>
+          <textarea id="jsonA" spellcheck="false"></textarea>
+          <label class="drop" id="dropA" for="fileA"><strong data-i18n="drop_title">+ file .json</strong><span data-i18n="drop_sub"> / drag & drop</span></label>
+          <input type="file" id="fileA" accept=".json,.txt,application/json" multiple>
+          <ul class="file-list" id="fileListA"></ul>
+          <div class="actions"><button type="button" class="btn secondary" id="clearA" data-i18n="clear_a" style="height:34px;font-size:13px">Bersihkan A</button></div>
+        </div>
+        <div class="side">
+          <h3><span class="badge-b">B</span> <span data-i18n="side_b">Sisi B (baru)</span></h3>
+          <p class="hint" data-i18n="side_b_hint">Paste JSON / URL list B</p>
+          <textarea id="jsonB" spellcheck="false"></textarea>
+          <label class="drop" id="dropB" for="fileB"><strong data-i18n="drop_title">+ file .json</strong><span data-i18n="drop_sub"> / drag & drop</span></label>
+          <input type="file" id="fileB" accept=".json,.txt,application/json" multiple>
+          <ul class="file-list" id="fileListB"></ul>
+          <div class="actions"><button type="button" class="btn secondary" id="clearB" data-i18n="clear_b" style="height:34px;font-size:13px">Bersihkan B</button></div>
+        </div>
+      </div>
+
+      <div class="opts">
+        <label><input type="checkbox" id="optQuery"> <span data-i18n="opt_query">Abaikan query string (?…)</span></label>
+        <label><input type="checkbox" id="optSlash"> <span data-i18n="opt_slash">Abaikan trailing slash</span></label>
+        <label><input type="checkbox" id="optCase"> <span data-i18n="opt_case">Case-insensitive</span></label>
+        <label><input type="checkbox" id="optSort" checked> <span data-i18n="opt_sort">Urutkan hasil A–Z</span></label>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" id="compareBtn">⚖️ <span data-i18n="compare">Bandingkan</span></button>
+        <button type="button" class="btn secondary" id="resetBtn" data-i18n="reset">Reset Semua</button>
+      </div>
+      <div id="inputStatus" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="stats" aria-label="statistik">
+      <div class="stat"><span class="stat-label" data-i18n="st_a">Unik A</span><span class="stat-value" id="countA">0</span></div>
+      <div class="stat"><span class="stat-label" data-i18n="st_b">Unik B</span><span class="stat-value" id="countB">0</span></div>
+      <div class="stat only-a"><span class="stat-label" data-i18n="st_only_a">Hanya di A</span><span class="stat-value" id="countOnlyA">0</span></div>
+      <div class="stat only-b"><span class="stat-label" data-i18n="st_only_b">Hanya di B</span><span class="stat-value" id="countOnlyB">0</span></div>
+      <div class="stat both"><span class="stat-label" data-i18n="st_both">Sama</span><span class="stat-value" id="countBoth">0</span></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2 data-i18n="res_title">2. Hasil Perbandingan</h2>
+        <p data-i18n="res_desc">Hanya di A = dihapus, Hanya di B = tambahan baru.</p>
+      </div>
+      <div class="res-grid">
+        <div class="res">
+          <h3>🔵 <span data-i18n="only_a">Hanya di A</span> <span class="count" id="badgeOnlyA">0</span></h3>
+          <textarea class="result" id="resOnlyA" readonly spellcheck="false"></textarea>
+          <div class="mini-actions"><button type="button" class="btn secondary" id="copyA" disabled>⧉ Copy</button></div>
+        </div>
+        <div class="res">
+          <h3>🟢 <span data-i18n="only_b">Hanya di B</span> <span class="count" id="badgeOnlyB">0</span></h3>
+          <textarea class="result" id="resOnlyB" readonly spellcheck="false"></textarea>
+          <div class="mini-actions"><button type="button" class="btn secondary" id="copyB" disabled>⧉ Copy</button></div>
+        </div>
+        <div class="res">
+          <h3>⚪ <span data-i18n="both">Sama</span> <span class="count" id="badgeBoth">0</span></h3>
+          <textarea class="result" id="resBoth" readonly spellcheck="false"></textarea>
+          <div class="mini-actions"><button type="button" class="btn secondary" id="copyBoth" disabled>⧉ Copy</button></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn secondary" id="downloadBtn" disabled>⬇ <span data-i18n="download">Download hasil (.txt)</span></button>
+      </div>
+      <div id="resultStatus" class="status" aria-live="polite"></div>
+    </section>
+
+    <p class="footer" data-i18n="footer">Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend</p>
+  </main>
+
+  <script>
+    "use strict";
+    const $ = (id) => document.getElementById(id);
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
+    const STR = {
+      id: {
+        badge: "100% lokal · tanpa backend", back: "Beranda",
+        title: "API Response Comparer",
+        subtitle: "Tempel dua JSON atau daftar URL (A vs B), atau upload file. Otomatis ekstrak URL lalu bandingkan.",
+        input_title: "1. Input A vs B", input_desc: "Mendukung JSON mentah atau daftar URL per baris. File digabung dengan paste per sisi.",
+        side_a: "Sisi A (lama)", side_a_hint: "Paste JSON / URL list A",
+        side_b: "Sisi B (baru)", side_b_hint: "Paste JSON / URL list B",
+        drop_title: "+ file .json", drop_sub: " / drag & drop",
+        clear_a: "Bersihkan A", clear_b: "Bersihkan B",
+        opt_query: "Abaikan query string (?…)", opt_slash: "Abaikan trailing slash",
+        opt_case: "Case-insensitive", opt_sort: "Urutkan hasil A–Z",
+        compare: "Bandingkan", reset: "Reset Semua",
+        st_a: "Unik A", st_b: "Unik B", st_only_a: "Hanya di A", st_only_b: "Hanya di B", st_both: "Sama",
+        res_title: "2. Hasil Perbandingan", res_desc: "Hanya di A = dihapus, Hanya di B = tambahan baru.",
+        only_a: "Hanya di A", only_b: "Hanya di B", both: "Sama",
+        download: "Download hasil (.txt)",
+        footer: "Pemrosesan lokal · Tidak mengakses URL · Tidak butuh backend",
+        ph_a: "Paste JSON / URL list A di sini…", ph_b: "Paste JSON / URL list B di sini…",
+        ph_res: "Hasil akan muncul di sini…",
+        err_empty: "Isi sisi A dan B dulu (paste atau file).",
+        err_big: "melebihi 20 MB, dilewati.",
+        ok: (a, b, oa, ob, s) => `Selesai. A: ${a} unik, B: ${b} unik. Hanya A: ${oa}, Hanya B: ${ob}, Sama: ${s}.`,
+        cleared: "Dibersihkan.", updated: "Hasil diperbarui.",
+        copied: "Disalin.", downloaded: "File compare_result.txt dibuat."
+      },
+      en: {
+        badge: "100% local · no backend", back: "Home",
+        title: "API Response Comparer",
+        subtitle: "Paste two JSONs or URL lists (A vs B), or upload files. URLs are auto-extracted then compared.",
+        input_title: "1. Input A vs B", input_desc: "Supports raw JSON or one-URL-per-line. Files are merged with paste per side.",
+        side_a: "Side A (old)", side_a_hint: "Paste JSON / URL list A",
+        side_b: "Side B (new)", side_b_hint: "Paste JSON / URL list B",
+        drop_title: "+ .json files", drop_sub: " / drag & drop",
+        clear_a: "Clear A", clear_b: "Clear B",
+        opt_query: "Ignore query string (?…)", opt_slash: "Ignore trailing slash",
+        opt_case: "Case-insensitive", opt_sort: "Sort A–Z",
+        compare: "Compare", reset: "Reset All",
+        st_a: "Unique A", st_b: "Unique B", st_only_a: "Only in A", st_only_b: "Only in B", st_both: "Same",
+        res_title: "2. Comparison Results", res_desc: "Only in A = removed, Only in B = newly added.",
+        only_a: "Only in A", only_b: "Only in B", both: "Same",
+        download: "Download results (.txt)",
+        footer: "Local processing · Never fetches URLs · No backend needed",
+        ph_a: "Paste JSON / URL list A here…", ph_b: "Paste JSON / URL list B here…",
+        ph_res: "Results will appear here…",
+        err_empty: "Fill side A and B first (paste or files).",
+        err_big: "exceeds 20 MB, skipped.",
+        ok: (a, b, oa, ob, s) => `Done. A: ${a} unique, B: ${b} unique. Only A: ${oa}, Only B: ${ob}, Same: ${s}.`,
+        cleared: "Cleared.", updated: "Results updated.",
+        copied: "Copied.", downloaded: "File compare_result.txt created."
+      }
+    };
+    let lang = localStorage.getItem("api-ext-lang") || "id";
+    if (!STR[lang]) lang = "id";
+    const t = (k) => STR[lang][k];
+
+    function applyLang() {
+      document.documentElement.lang = lang;
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const k = el.getAttribute("data-i18n");
+        if (STR[lang][k]) el.textContent = STR[lang][k];
+      });
+      $("jsonA").placeholder = t("ph_a"); $("jsonB").placeholder = t("ph_b");
+      ["resOnlyA","resOnlyB","resBoth"].forEach(id => $(id).placeholder = t("ph_res"));
+      $("langIdBtn").setAttribute("aria-pressed", lang === "id");
+      $("langEnBtn").setAttribute("aria-pressed", lang === "en");
+      localStorage.setItem("api-ext-lang", lang);
+    }
+    function applyTheme(m) {
+      document.documentElement.setAttribute("data-theme", m);
+      $("themeToggle").textContent = m === "dark" ? "☀️" : "🌙";
+      localStorage.setItem("api-ext-theme", m);
+    }
+    let theme = localStorage.getItem("api-ext-theme") ||
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    applyTheme(theme);
+    $("themeToggle").onclick = () => {
+      theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      applyTheme(theme);
+    };
+    $("langIdBtn").onclick = () => { lang = "id"; applyLang(); };
+    $("langEnBtn").onclick = () => { lang = "en"; applyLang(); };
+
+    function setStatus(id, msg, type = "") {
+      const el = $(id);
+      el.textContent = msg;
+      el.className = "status" + (type ? " " + type : "");
+    }
+
+    function extractUrlsFromJson(data) {
+      const urls = [];
+      (function scan(v) {
+        if (typeof v === "string") {
+          const re = /https?:\/\/[^\s"'<>\\]+/gi;
+          let m; while ((m = re.exec(v)) !== null) {
+            const u = m[0].replace(/[.,;!?)}\]]+$/g, "");
+            if (u) urls.push(u);
+          }
+          return;
+        }
+        if (Array.isArray(v)) { v.forEach(scan); return; }
+        if (v !== null && typeof v === "object") Object.values(v).forEach(scan);
+      })(data);
+      return urls;
+    }
+
+    function urlsFromText(text) {
+      if (!text.trim()) return [];
+      try {
+        return extractUrlsFromJson(JSON.parse(text));
+      } catch {
+        const re = /https?:\/\/[^\s"'<>\\]+/gi;
+        const out = []; let m;
+        while ((m = re.exec(text)) !== null) {
+          const u = m[0].replace(/[.,;!?)}\]]+$/g, "");
+          if (u) out.push(u);
+        }
+        return out;
+      }
+    }
+
+    function normalizeUrl(raw, o) {
+      let s = raw.trim();
+      if (!s) return "";
+      if (o.caseInsensitive) s = s.toLowerCase();
+      try {
+        const u = new URL(s);
+        if (o.caseInsensitive) { u.hostname = u.hostname.toLowerCase(); }
+        if (o.ignoreQuery) { u.search = ""; u.hash = ""; }
+        s = u.toString();
+      } catch { /* bukan URL absolut valid, biarkan string */ }
+      if (o.ignoreTrailingSlash && s.length > 1) s = s.replace(/\/+$/g, "");
+      return s;
+    }
+
+    function bindDrop(dropId, inputId, listId) {
+      const dz = $(dropId);
+      const render = () => {
+        const files = Array.from($(inputId).files);
+        $(listId).innerHTML = files.map(f =>
+          `<li><span>${f.name}</span><span>${(f.size/1024).toFixed(1)} KB</span></li>`).join("");
+      };
+      $(inputId).addEventListener("change", render);
+      ["dragover","dragenter"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("dragover"); }));
+      ["dragleave","drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("dragover"); }));
+      dz.addEventListener("drop", e => {
+        if (e.dataTransfer.files.length) { $(inputId).files = e.dataTransfer.files; render(); }
+      });
+    }
+    bindDrop("dropA", "fileA", "fileListA");
+    bindDrop("dropB", "fileB", "fileListB");
+
+    async function collectSide(pasteText, fileInput, errs) {
+      let urls = urlsFromText(pasteText);
+      const files = Array.from(fileInput.files);
+      for (const f of files) {
+        if (f.size > MAX_FILE_SIZE) { errs.push(`${f.name}: ${t("err_big")}`); continue; }
+        try { urls.push(...urlsFromText(await f.text())); }
+        catch (e) { errs.push(`${f.name}: ${e.message}`); }
+      }
+      return { urls, fileCount: files.length };
+    }
+
+    let last = { onlyA: [], onlyB: [], both: [] };
+
+    $("compareBtn").addEventListener("click", async () => {
+      const btn = $("compareBtn");
+      btn.disabled = true;
+      setStatus("inputStatus", t("updated"));
+      try {
+        const o = {
+          ignoreQuery: $("optQuery").checked,
+          ignoreTrailingSlash: $("optSlash").checked,
+          caseInsensitive: $("optCase").checked,
+          sort: $("optSort").checked
+        };
+        const errs = [];
+        const A = await collectSide($("jsonA").value, $("fileA"), errs);
+        const B = await collectSide($("jsonB").value, $("fileB"), errs);
+
+        if (A.urls.length === 0 && B.urls.length === 0) {
+          setStatus("inputStatus", errs.length ? errs.join(" ") : t("err_empty"), "error");
+          return;
+        }
+
+        const norm = (arr) => [...new Set(arr.map(u => normalizeUrl(u, o)).filter(Boolean))];
+        const setA = new Set(norm(A.urls));
+        const setB = new Set(norm(B.urls));
+        const onlyA = [...setA].filter(x => !setB.has(x));
+        const onlyB = [...setB].filter(x => !setA.has(x));
+        const both = [...setA].filter(x => setB.has(x));
+        if (o.sort) { const s = (x, y) => x.localeCompare(y); onlyA.sort(s); onlyB.sort(s); both.sort(s); }
+
+        last = { onlyA, onlyB, both };
+
+        $("countA").textContent = setA.size.toLocaleString();
+        $("countB").textContent = setB.size.toLocaleString();
+        $("countOnlyA").textContent = onlyA.length.toLocaleString();
+        $("countOnlyB").textContent = onlyB.length.toLocaleString();
+        $("countBoth").textContent = both.length.toLocaleString();
+        $("badgeOnlyA").textContent = onlyA.length.toLocaleString();
+        $("badgeOnlyB").textContent = onlyB.length.toLocaleString();
+        $("badgeBoth").textContent = both.length.toLocaleString();
+
+        $("resOnlyA").value = onlyA.join("\n");
+        $("resOnlyB").value = onlyB.join("\n");
+        $("resBoth").value = both.join("\n");
+
+        const has = (arr) => arr.length > 0;
+        $("copyA").disabled = !has(onlyA); $("copyB").disabled = !has(onlyB); $("copyBoth").disabled = !has(both);
+        $("downloadBtn").disabled = !(has(onlyA) || has(onlyB) || has(both));
+
+        const msg = t("ok")(setA.size, setB.size, onlyA.length, onlyB.length, both.length);
+        setStatus("inputStatus", errs.length ? `${msg} ${errs.join(" ")}` : msg, "success");
+        setStatus("resultStatus", t("updated"), "success");
+      } finally { btn.disabled = false; }
+    });
+
+    async function copyText(id) {
+      const v = $(id).value;
+      if (!v) return;
+      try { await navigator.clipboard.writeText(v); setStatus("resultStatus", t("copied"), "success"); }
+      catch {
+        $(id).focus(); $(id).select();
+        try { document.execCommand("copy"); setStatus("resultStatus", t("copied"), "success"); }
+        catch { setStatus("resultStatus", t("copied"), "success"); }
+      }
+    }
+    $("copyA").onclick = () => copyText("resOnlyA");
+    $("copyB").onclick = () => copyText("resOnlyB");
+    $("copyBoth").onclick = () => copyText("resBoth");
+
+    $("downloadBtn").onclick = () => {
+      const out = `# ONLY IN A (${last.onlyA.length})\n${last.onlyA.join("\n")}\n\n# ONLY IN B (${last.onlyB.length})\n${last.onlyB.join("\n")}\n\n# SAME (${last.both.length})\n${last.both.join("\n")}\n`;
+      const blob = new Blob([out], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "compare_result.txt";
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      setStatus("resultStatus", t("downloaded"), "success");
+    };
+
+    function clearSide(which) {
+      if (which === "A") { $("jsonA").value = ""; $("fileA").value = ""; $("fileListA").innerHTML = ""; }
+      else { $("jsonB").value = ""; $("fileB").value = ""; $("fileListB").innerHTML = ""; }
+      setStatus("inputStatus", t("cleared"));
+    }
+    $("clearA").onclick = () => clearSide("A");
+    $("clearB").onclick = () => clearSide("B");
+    $("resetBtn").onclick = () => {
+      ["jsonA","jsonB"].forEach(id => $(id).value = "");
+      ["fileA","fileB"].forEach(id => $(id).value = "");
+      ["fileListA","fileListB"].forEach(id => $(id).innerHTML = "");
+      ["resOnlyA","resOnlyB","resBoth"].forEach(id => $(id).value = "");
+      ["countA","countB","countOnlyA","countOnlyB","countBoth","badgeOnlyA","badgeOnlyB","badgeBoth"]
+        .forEach(id => $(id).textContent = "0");
+      ["copyA","copyB","copyBoth","downloadBtn"].forEach(id => $(id).disabled = true);
+      last = { onlyA: [], onlyB: [], both: [] };
+      setStatus("inputStatus", ""); setStatus("resultStatus", "");
+    };
+
+    applyLang();
+  </script>
+</body>
+</html>

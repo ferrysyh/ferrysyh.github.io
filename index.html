@@ -2,45 +2,42 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>API Unique URL Extractor</title>
-  <meta name="description" content="Extract unique HTTP and HTTPS URLs from JSON API responses.">
+
   <style>
     :root {
-      color-scheme: light;
-      --bg: #f5f7fb;
-      --surface: #ffffff;
-      --text: #172033;
-      --muted: #64748b;
-      --border: #dce3ed;
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --text: #182230;
+      --muted: #667085;
+      --border: #d0d5dd;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
-      --danger: #b91c1c;
+      --danger: #b42318;
+      --success: #067647;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", sans-serif;
-      line-height: 1.6;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
     }
 
     .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 32px 18px 56px;
+      width: min(100% - 32px, 1000px);
+      margin: 36px auto;
     }
-
-    header { margin-bottom: 24px; }
 
     h1 {
       margin: 0 0 8px;
       font-size: clamp(25px, 4vw, 34px);
-      line-height: 1.25;
     }
 
     h2 {
@@ -48,110 +45,121 @@
       font-size: 19px;
     }
 
-    p { margin: 6px 0 12px; }
+    p {
+      margin: 6px 0 14px;
+    }
 
-    .muted, .hint {
+    .muted {
       color: var(--muted);
       font-size: 14px;
     }
 
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+      background: var(--card);
+      border: 1px solid #e4e7ec;
+      border-radius: 12px;
       padding: 22px;
-      margin-bottom: 18px;
-      box-shadow: 0 3px 12px rgba(15, 23, 42, 0.035);
-    }
-
-    textarea, input[type="file"] {
-      width: 100%;
-      font: inherit;
+      margin-top: 18px;
+      box-shadow: 0 2px 8px rgba(16, 24, 40, .04);
     }
 
     textarea {
       display: block;
-      min-height: 190px;
-      resize: vertical;
+      width: 100%;
+      min-height: 210px;
       padding: 13px;
       border: 1px solid var(--border);
-      border-radius: 9px;
-      background: #fff;
-      color: var(--text);
+      border-radius: 8px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
       overflow-wrap: anywhere;
     }
 
-    textarea:focus, input:focus-visible, button:focus-visible {
+    #results {
+      min-height: 280px;
+    }
+
+    textarea:focus,
+    input:focus-visible,
+    button:focus-visible {
       outline: 2px solid var(--primary);
       outline-offset: 2px;
     }
 
     input[type="file"] {
       display: block;
-      margin: 14px 0;
+      width: 100%;
+      margin: 16px 0;
       padding: 12px;
-      border: 1px dashed #aab7ca;
-      border-radius: 9px;
-      background: #fafcff;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: #fafafa;
     }
 
     .actions {
       display: flex;
       flex-wrap: wrap;
       gap: 9px;
-      margin-top: 13px;
+      margin-top: 14px;
     }
 
     button {
+      padding: 10px 15px;
       border: 1px solid transparent;
       border-radius: 8px;
-      padding: 10px 15px;
-      font: inherit;
-      font-size: 14px;
-      font-weight: 650;
-      cursor: pointer;
       background: var(--primary);
       color: white;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
     }
 
-    button:hover { background: var(--primary-hover); }
+    button:hover {
+      background: var(--primary-hover);
+    }
 
     button.secondary {
+      background: white;
       color: var(--text);
-      background: #fff;
       border-color: var(--border);
     }
 
-    button.secondary:hover { background: #f1f5f9; }
+    button.secondary:hover {
+      background: #f2f4f7;
+    }
 
     button:disabled {
-      cursor: not-allowed;
       opacity: .5;
+      cursor: not-allowed;
     }
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-      margin-bottom: 18px;
+      margin-top: 18px;
     }
 
     .stat {
+      background: white;
+      border: 1px solid #e4e7ec;
+      border-radius: 10px;
       padding: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      min-width: 0;
     }
 
     .stat-label {
+      display: block;
       color: var(--muted);
       font-size: 13px;
     }
 
     .stat-value {
       display: block;
-      font-size: 28px;
-      font-weight: 750;
+      font-size: 27px;
+      font-weight: 700;
       overflow-wrap: anywhere;
     }
 
@@ -161,30 +169,38 @@
       overflow-wrap: anywhere;
     }
 
-    .status.error { color: var(--danger); }
-    .status.success { color: #166534; }
+    .error {
+      color: var(--danger);
+    }
 
-    #results {
-      min-height: 260px;
-      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-      font-size: 13px;
-      line-height: 1.7;
+    .success {
+      color: var(--success);
     }
 
     .footer {
-      color: var(--muted);
-      font-size: 13px;
+      margin-top: 24px;
       text-align: center;
-      margin-top: 22px;
+      color: var(--muted);
+      font-size: 12px;
     }
 
     @media (max-width: 600px) {
-      .container { padding: 22px 12px 36px; }
-      .card { padding: 16px; }
-      .stats { grid-template-columns: 1fr; gap: 8px; }
-      .stat { padding: 12px 14px; }
-      .stat-value { font-size: 23px; }
-      .actions button { flex: 1 1 auto; }
+      .container {
+        margin: 20px auto;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .actions button {
+        flex: 1 1 auto;
+      }
     }
   </style>
 </head>
@@ -194,24 +210,24 @@
     <header>
       <h1>API Unique URL Extractor</h1>
       <p class="muted">
-        Ekstrak URL unik dari response API JSON dengan upload file
-        atau copy-paste langsung.
+        Extract URL unik dari JSON API response melalui paste langsung
+        atau upload file JSON.
       </p>
     </header>
 
+    <!-- INPUT 1: PASTE JSON -->
     <section class="card">
       <h2>1. Paste JSON Response</h2>
-      <p class="hint">
-        Tempel response JSON dari Burp Suite, Postman, browser,
-        atau sumber lain. Pemrosesan dilakukan di browser Anda.
+      <p class="muted">
+        Salin response dari Burp Suite, Postman, browser, atau sumber
+        lain, lalu tempel di kolom berikut.
       </p>
 
       <textarea
         id="jsonInput"
-        placeholder='Contoh:
+        placeholder='Paste JSON response di sini, contoh:
 {
   "data": [
-    {"url": "https://example.com/api/users?id=1"},
     {"url": "https://example.com/api/users?id=1"},
     {"url": "https://example.com/api/users?id=2"}
   ]
@@ -224,18 +240,21 @@
         <button type="button" id="processPasteBtn">
           Proses JSON
         </button>
+
         <button type="button" class="secondary" id="clearPasteBtn">
           Bersihkan Paste
         </button>
       </div>
+
       <div id="pasteStatus" class="status" aria-live="polite"></div>
     </section>
 
+    <!-- INPUT 2: UPLOAD FILE -->
     <section class="card">
       <h2>2. Upload File JSON</h2>
-      <p class="hint">
-        Pilih satu atau beberapa file .json. Hasilnya akan digabungkan
-        dengan data yang sudah diproses dari paste.
+      <p class="muted">
+        Anda juga bisa memilih beberapa file JSON sekaligus.
+        Hasil upload akan digabungkan dengan hasil paste.
       </p>
 
       <input
@@ -250,39 +269,46 @@
         <button type="button" id="processFilesBtn">
           Proses File
         </button>
+
         <button type="button" class="secondary" id="clearFilesBtn">
           Bersihkan Pilihan File
         </button>
       </div>
+
       <div id="fileStatus" class="status" aria-live="polite"></div>
     </section>
 
-    <section aria-label="Statistik hasil" class="stats">
+    <!-- STATISTIK -->
+    <section class="stats" aria-label="Statistik hasil">
       <div class="stat">
         <span class="stat-label">URL Unik</span>
         <span class="stat-value" id="uniqueCount">0</span>
       </div>
+
       <div class="stat">
         <span class="stat-label">Total URL Ditemukan</span>
         <span class="stat-value" id="totalCount">0</span>
       </div>
+
       <div class="stat">
         <span class="stat-label">Duplikat Dihapus</span>
         <span class="stat-value" id="duplicateCount">0</span>
       </div>
     </section>
 
+    <!-- OUTPUT -->
     <section class="card">
       <h2>3. Hasil URL Unik</h2>
-      <p class="hint">
-        Setiap URL ditampilkan satu kali. Query parameter dipertahankan.
+      <p class="muted">
+        Hasil dari paste dan upload digabungkan. Setiap URL yang identik
+        hanya ditampilkan sekali.
       </p>
 
       <textarea
         id="results"
         readonly
         spellcheck="false"
-        placeholder="Hasil URL akan muncul di sini..."
+        placeholder="Hasil ekstraksi akan muncul di sini..."
         aria-label="Hasil URL unik"
       ></textarea>
 
@@ -290,19 +316,22 @@
         <button type="button" id="copyBtn" disabled>
           Copy Hasil
         </button>
+
         <button type="button" id="downloadBtn" disabled>
           Download TXT
         </button>
+
         <button type="button" class="secondary" id="resetBtn">
           Reset Semua
         </button>
       </div>
+
       <div id="resultStatus" class="status" aria-live="polite"></div>
     </section>
 
     <p class="footer">
-      Client-side only · Tidak ada request ke URL yang diekstrak ·
-      Tidak memerlukan backend
+      Pemrosesan lokal di browser · Tidak mengakses URL yang ditemukan
+      · Tidak membutuhkan backend
     </p>
   </main>
 
@@ -311,53 +340,55 @@
 
     const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
-    // Menyimpan URL dari setiap sumber yang sudah berhasil diproses.
+    // Setiap input disimpan secara terpisah agar dapat dibersihkan.
     const sources = new Map();
 
     const $ = (id) => document.getElementById(id);
 
     function setStatus(id, message, type = "") {
-      const el = $(id);
-      el.textContent = message;
-      el.className = "status" + (type ? " " + type : "");
+      const element = $(id);
+      element.textContent = message;
+      element.className = "status" + (type ? " " + type : "");
     }
 
-    // Mengambil URL absolut HTTP/HTTPS dari string.
-    // Tidak melakukan request ke URL tersebut.
-    function extractUrls(json) {
-      const found = [];
+    // Ekstrak URL absolut HTTP/HTTPS dari nilai string JSON.
+    function extractUrls(data) {
+      const urls = [];
 
       function scan(value) {
         if (typeof value === "string") {
-          const pattern = /https?:\/\/[^\s"'<>\\]+/gi;
+          const regex = /https?:\/\/[^\s"'<>\\]+/gi;
           let match;
 
-          while ((match = pattern.exec(value)) !== null) {
+          while ((match = regex.exec(value)) !== null) {
             let url = match[0];
 
-            // Hilangkan tanda baca penutup yang biasanya
-            // berasal dari teks di sekitar URL.
-            url = url.replace(/[.,;:!?)}\]]+$/g, "");
+            // Hapus tanda baca penutup yang biasanya bukan bagian URL.
+            url = url.replace(/[.,;!?)}\]]+$/g, "");
 
-            if (url) found.push(url);
+            if (url) {
+              urls.push(url);
+            }
           }
+
           return;
         }
 
         if (Array.isArray(value)) {
-          for (const item of value) scan(item);
+          value.forEach(scan);
           return;
         }
 
         if (value !== null && typeof value === "object") {
-          for (const item of Object.values(value)) scan(item);
+          Object.values(value).forEach(scan);
         }
       }
 
-      scan(json);
-      return found;
+      scan(data);
+      return urls;
     }
 
+    // Render ulang seluruh output dan statistik.
     function renderResults() {
       const allUrls = [];
 
@@ -367,8 +398,12 @@
 
       const uniqueUrls = [...new Set(allUrls)];
 
-      $("uniqueCount").textContent = uniqueUrls.length.toLocaleString();
-      $("totalCount").textContent = allUrls.length.toLocaleString();
+      $("uniqueCount").textContent =
+        uniqueUrls.length.toLocaleString();
+
+      $("totalCount").textContent =
+        allUrls.length.toLocaleString();
+
       $("duplicateCount").textContent =
         (allUrls.length - uniqueUrls.length).toLocaleString();
 
@@ -379,30 +414,30 @@
       return { allUrls, uniqueUrls };
     }
 
+    // Parsing JSON dilakukan sebelum sumber lama diganti.
     function processJsonText(text, sourceId) {
-      const trimmed = text.trim();
-
-      if (!trimmed) {
-        throw new Error("Input JSON kosong.");
+      if (!text.trim()) {
+        throw new Error("Input JSON masih kosong.");
       }
 
-      let parsed;
+      let data;
 
       try {
-        parsed = JSON.parse(trimmed);
+        data = JSON.parse(text);
       } catch {
         throw new Error(
-          "Format JSON tidak valid. Periksa tanda kurung, koma, dan tanda kutip."
+          "JSON tidak valid. Periksa format response yang ditempel."
         );
       }
 
-      const urls = extractUrls(parsed);
+      const urls = extractUrls(data);
       sources.set(sourceId, urls);
-
       renderResults();
+
       return urls;
     }
 
+    // PROSES PASTE
     $("processPasteBtn").addEventListener("click", () => {
       try {
         const urls = processJsonText(
@@ -412,41 +447,58 @@
 
         setStatus(
           "pasteStatus",
-          `Berhasil memproses JSON. ${urls.length} URL ditemukan, termasuk duplikat jika ada.`,
+          `Berhasil memproses JSON. ${urls.length} URL ditemukan sebelum deduplikasi.`,
           "success"
         );
-        setStatus("resultStatus", "Hasil telah diperbarui.", "success");
+
+        setStatus(
+          "resultStatus",
+          "Hasil telah diperbarui.",
+          "success"
+        );
       } catch (error) {
         setStatus("pasteStatus", error.message, "error");
       }
     });
 
+    // BERSIHKAN PASTE DAN HAPUS HASIL SUMBER PASTE
     $("clearPasteBtn").addEventListener("click", () => {
       $("jsonInput").value = "";
       sources.delete("paste");
+
       renderResults();
-      setStatus("pasteStatus", "Input paste dibersihkan.");
-      setStatus("resultStatus", "Hasil diperbarui.");
+
+      setStatus("pasteStatus", "Input paste telah dibersihkan.");
+      setStatus("resultStatus", "Hasil telah diperbarui.");
     });
 
+    // PROSES MULTIPLE FILE
     $("processFilesBtn").addEventListener("click", async () => {
       const files = Array.from($("fileInput").files);
 
       if (files.length === 0) {
-        setStatus("fileStatus", "Pilih setidaknya satu file JSON.", "error");
+        setStatus(
+          "fileStatus",
+          "Silakan pilih setidaknya satu file JSON.",
+          "error"
+        );
         return;
       }
 
       const button = $("processFilesBtn");
       button.disabled = true;
-      setStatus("fileStatus", "Sedang memproses file...");
 
       let processed = 0;
       const errors = [];
 
+      setStatus("fileStatus", "Memproses file...");
+
       try {
-        for (const file of files) {
-          const sourceId = "file:" + file.name;
+        for (let index = 0; index < files.length; index++) {
+          const file = files[index];
+
+          // Indeks membedakan dua file dengan nama yang sama.
+          const sourceId = `file:${index}:${file.name}`;
 
           if (file.size > MAX_FILE_SIZE) {
             errors.push(`${file.name}: ukuran melebihi 20 MB.`);
@@ -454,8 +506,8 @@
           }
 
           try {
-            const content = await file.text();
-            processJsonText(content, sourceId);
+            const text = await file.text();
+            processJsonText(text, sourceId);
             processed++;
           } catch (error) {
             errors.push(`${file.name}: ${error.message}`);
@@ -465,7 +517,7 @@
         if (errors.length > 0) {
           setStatus(
             "fileStatus",
-            `Berhasil memproses ${processed} file. ${errors.join(" ")}`,
+            `Berhasil: ${processed} file. Kesalahan: ${errors.join(" ")}`,
             processed > 0 ? "" : "error"
           );
         } else {
@@ -482,18 +534,23 @@
       }
     });
 
+    // BERSIHKAN HASIL FILE SAJA
     $("clearFilesBtn").addEventListener("click", () => {
       $("fileInput").value = "";
 
       for (const key of [...sources.keys()]) {
-        if (key.startsWith("file:")) sources.delete(key);
+        if (key.startsWith("file:")) {
+          sources.delete(key);
+        }
       }
 
       renderResults();
-      setStatus("fileStatus", "Pilihan file dan hasil dari file dibersihkan.");
-      setStatus("resultStatus", "Hasil diperbarui.");
+
+      setStatus("fileStatus", "Input file telah dibersihkan.");
+      setStatus("resultStatus", "Hasil telah diperbarui.");
     });
 
+    // COPY HASIL
     $("copyBtn").addEventListener("click", async () => {
       const output = $("results").value;
 
@@ -501,52 +558,63 @@
 
       try {
         await navigator.clipboard.writeText(output);
+
         setStatus("resultStatus", "Hasil berhasil disalin.", "success");
       } catch {
-        // Fallback untuk browser yang tidak menyediakan Clipboard API.
+        // Fallback untuk browser yang tidak mendukung Clipboard API.
         $("results").focus();
         $("results").select();
 
         try {
-          const copied = document.execCommand("copy");
+          const success = document.execCommand("copy");
+
           setStatus(
             "resultStatus",
-            copied
+            success
               ? "Hasil berhasil disalin."
-              : "Copy otomatis gagal. Pilih teks hasil lalu salin secara manual.",
-            copied ? "success" : "error"
+              : "Copy otomatis gagal. Pilih hasil lalu tekan Ctrl+C.",
+            success ? "success" : "error"
           );
         } catch {
           setStatus(
             "resultStatus",
-            "Copy otomatis gagal. Pilih teks hasil lalu tekan Ctrl+C.",
+            "Pilih teks hasil secara manual lalu tekan Ctrl+C.",
             "error"
           );
         }
       }
     });
 
+    // DOWNLOAD TXT
     $("downloadBtn").addEventListener("click", () => {
       const output = $("results").value;
+
       if (!output) return;
 
       const blob = new Blob([output + "\n"], {
         type: "text/plain;charset=utf-8"
       });
 
-      const url = URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
 
-      link.href = url;
+      link.href = objectUrl;
       link.download = "api_unique.txt";
+
       document.body.appendChild(link);
       link.click();
       link.remove();
 
-      URL.revokeObjectURL(url);
-      setStatus("resultStatus", "File TXT berhasil dibuat.", "success");
+      URL.revokeObjectURL(objectUrl);
+
+      setStatus(
+        "resultStatus",
+        "File api_unique.txt berhasil dibuat.",
+        "success"
+      );
     });
 
+    // RESET SEMUA INPUT DAN HASIL
     $("resetBtn").addEventListener("click", () => {
       sources.clear();
 
@@ -560,6 +628,7 @@
       renderResults();
     });
 
+    // Inisialisasi tampilan.
     renderResults();
   </script>
 </body>

@@ -73,6 +73,11 @@
     button.btn:focus-visible, .icon-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
     .toolbar input[type="search"] { flex: 1; min-width: 200px; }
+    .pager { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .pager button.btn { height: 34px; padding: 0 14px; font-size: 15px; }
+    .pager button.btn:disabled { opacity: .4; cursor: not-allowed; }
+    .pager select { height: 34px; padding: 0 8px; }
+    #pageInfo { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
     .meta { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
     .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 12px; max-height: 60vh; }
     table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 600px; }
@@ -175,6 +180,17 @@
         <button type="button" class="btn secondary" id="dlBtn" disabled>⬇ CSV</button>
       </div>
       <div class="table-wrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+      <div class="pager">
+        <button type="button" class="btn secondary" id="prevBtn">←</button>
+        <span id="pageInfo">—</span>
+        <button type="button" class="btn secondary" id="nextBtn">→</button>
+        <select id="pageSize" aria-label="Baris per halaman">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
       <div id="dataStatus" class="status" aria-live="polite"></div>
     </section>
   </main>
@@ -185,8 +201,8 @@
     const MAX_ROWS = 2000;
 
     // Koneksi ditanam di kode — user tidak perlu setup.
-    const SHEET_ID = "1rk9eou3IS836OLVtR0yNxBTgCrPlcX_elbNXRTKPPAY";
-    const SHEET_NAME = "SUMMARY";
+    const SHEET_ID = "1BcITysKJ6zP9OBvmGZ1GGIoYESbNmmj_Dy7fbxT76GI";
+    const SHEET_NAME = "";
 
     const STR = {
       id: {
@@ -383,6 +399,7 @@
         rows = clean.rows.slice(0, MAX_ROWS);
         loadedAt = new Date();
         openDetail.clear();
+        page = 1;
         resolveCols();
         renderStats();
         renderFilters();
@@ -463,22 +480,27 @@
       const st = (s) => count(r => String(r[CI.status] ?? "").trim().toLowerCase() === s);
       const complete = st("complete"), progress = st("on progress"),
         notstart = st("not started"), issue = st("issue");
+      const hold = count(r => {
+        const s = String(r[CI.status] ?? "").trim().toLowerCase();
+        return s.includes("hold") || s.includes("cancel");
+      });
       const pt = count(r => String(r[CI.task] ?? "").trim().toLowerCase() === "pt");
       const va = count(r => String(r[CI.task] ?? "").trim().toLowerCase() === "va");
-      // Status lain di luar 5 utama (mis. Hold/Canceled) ikut jadi kartu otomatis.
+      // Status lain yang belum dikenal ikut jadi kartu otomatis.
       const known = ["complete", "on progress", "not started", "issue"];
       const extra = {};
       rows.forEach(r => {
         const raw = String(r[CI.status] ?? "").trim();
-        if (!raw || known.includes(raw.toLowerCase())) return;
+        const low = raw.toLowerCase();
+        if (!raw || known.includes(low) || low.includes("hold") || low.includes("cancel")) return;
         extra[raw] = (extra[raw] || 0) + 1;
       });
       const L = lang === "id"
-        ? { total: "Total", done: "Complete", prog: "On Progress", ns: "Not Started", iss: "Issue", pt: "PT", va: "VA" }
-        : { total: "Total", done: "Complete", prog: "On Progress", ns: "Not Started", iss: "Issue", pt: "PT", va: "VA" };
+        ? { total: "Total", done: "Complete", prog: "On Progress", ns: "Not Started", iss: "Issue", hold: "Hold/Canceled", pt: "PT", va: "VA" }
+        : { total: "Total", done: "Complete", prog: "On Progress", ns: "Not Started", iss: "Issue", hold: "Hold/Canceled", pt: "PT", va: "VA" };
       el.innerHTML = [
         [L.total, rows.length], [L.done, complete], [L.prog, progress],
-        [L.ns, notstart], [L.iss, issue], [L.pt, pt], [L.va, va],
+        [L.ns, notstart], [L.iss, issue], [L.hold, hold], [L.pt, pt], [L.va, va],
         ...Object.entries(extra).sort((a, b) => b[1] - a[1])
       ].map(([label, n]) => `<div class="stat"><span>${esc(label)}</span><b>${n.toLocaleString()}</b></div>`).join("");
     }
@@ -497,8 +519,11 @@
     }
 
     function parseDate(v) {
-      const s = String(v ?? "").trim();
+      let s = String(v ?? "").trim();
       if (!s || s === "-") return null;
+      // Sheet memakai singkatan bulan Indonesia (Okt, Agu, Des, Mei) yg gagal di-parse browser.
+      s = s.replace(/\bMei\b/i, "May").replace(/\bAgu\b/i, "Aug")
+        .replace(/\bOkt\b/i, "Oct").replace(/\bDes\b/i, "Dec");
       const d = new Date(s);
       return isNaN(d) ? null : d;
     }
@@ -551,6 +576,8 @@
     }
 
     const openDetail = new Set();
+    let page = 1;
+    const pageSize = () => Number($("pageSize").value || 10);
     function renderTable() {
       const head = $("tbl").querySelector("thead");
       const body = $("tbl").querySelector("tbody");
@@ -559,7 +586,12 @@
         : ["No", "Task", "Schedule", "Status", "Progress", "Daily", ""];
       head.innerHTML = "<tr>" + L.map(h => `<th>${h}</th>`).join("") + "</tr>";
       const fr = filteredRows();
-      body.innerHTML = fr.map((r) => {
+      const size = pageSize();
+      const pages = Math.max(1, Math.ceil(fr.length / size));
+      if (page > pages) page = pages;
+      const start = (page - 1) * size;
+      const slice = fr.slice(start, start + size);
+      body.innerHTML = slice.map((r) => {
         const i = r._idx;
         const sched = [r[CI.start], r[CI.end]].map(v => String(v ?? "").trim()).filter(Boolean).join(" → ") || "-";
         const hasDetail = [r[CI.note], r[CI.event], r[CI.log]].some(v => String(v ?? "").trim() !== "");
@@ -584,6 +616,11 @@
       }).join("");
       if (!fr.length && rows.length) setStatus("dataStatus", t("noresult"));
       else if (rows.length) setStatus("dataStatus", "");
+      $("pageInfo").textContent = lang === "id"
+        ? `Hal ${page} dari ${pages}`
+        : `Page ${page} of ${pages}`;
+      $("prevBtn").disabled = page <= 1;
+      $("nextBtn").disabled = page >= pages;
     }
 
     function renderMeta() {
@@ -604,9 +641,15 @@
     })();
 
     $("refreshBtn").onclick = loadData;
-    $("search").addEventListener("input", renderTable);
-    $("statusFilter").addEventListener("change", renderTable);
-    $("taskFilter").addEventListener("change", renderTable);
+    $("search").addEventListener("input", () => { page = 1; renderTable(); });
+    $("statusFilter").addEventListener("change", () => { page = 1; renderTable(); });
+    $("taskFilter").addEventListener("change", () => { page = 1; renderTable(); });
+    $("prevBtn").onclick = () => { if (page > 1) { page--; renderTable(); } };
+    $("nextBtn").onclick = () => {
+      const pages = Math.max(1, Math.ceil(filteredRows().length / pageSize()));
+      if (page < pages) { page++; renderTable(); }
+    };
+    $("pageSize").addEventListener("change", () => { page = 1; renderTable(); });
     $("tbl").addEventListener("click", (e) => {
       const b = e.target.closest("[data-detail]");
       if (!b) return;
@@ -621,6 +664,7 @@
       $("statusFilter").value = "";
       $("taskFilter").value = "";
       $("search").value = String(r[CI.name] ?? "");
+      page = 1;
       renderTable();
       $("tbl").scrollIntoView({ behavior: "smooth", block: "start" });
     }
